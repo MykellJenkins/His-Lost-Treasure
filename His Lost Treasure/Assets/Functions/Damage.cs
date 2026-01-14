@@ -1,5 +1,5 @@
 using UnityEngine;
-using System.collections;
+using System.Collections;
 
 public class Damage : MonoBehaviour
 {
@@ -35,7 +35,7 @@ public class Damage : MonoBehaviour
     {
         if (type == damageType.homing)
         {
-            rb.linearVelocity = (GameManager.instance.player.transform.position - transform.position).normalized * speed * Time.deltaTime;
+            //rb.linearVelocity = (GameManager.instance.player.transform.position - transform.position).normalized * speed * Time.deltaTime;
         }
 
     }
