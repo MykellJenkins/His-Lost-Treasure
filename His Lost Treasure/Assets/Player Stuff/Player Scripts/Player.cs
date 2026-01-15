@@ -6,7 +6,8 @@ public enum PlayerState
     Run, 
     Jump, 
     Crouch, 
-    Slide 
+    Slide,
+    Sprint
 }
 public class Player : MonoBehaviour 
 { 
@@ -24,6 +25,10 @@ public class Player : MonoBehaviour
     public KeyCode leftKey = KeyCode.A; 
     public KeyCode backKey = KeyCode.S; 
     public KeyCode rightKey = KeyCode.D;
+
+    // Sprinting
+    public float SprintSpeed = 6f;
+    public KeyCode RunKey = KeyCode.LeftShift;
 
     // Jumping
     public float jumpForce = 10f; 
@@ -99,39 +104,43 @@ public class Player : MonoBehaviour
     void HandleStateTransitions() 
     { 
         switch (currentState) 
-        { 
-            case PlayerState.Idle: 
-                if (moveDirection.magnitude > 0.1f) 
-                    currentState = PlayerState.Run; 
-                if (Input.GetKeyDown(jumpKey) && isGrounded) 
-                    currentState = PlayerState.Jump;
-                if (isGrounded) 
+        {
+            case PlayerState.Idle:
+                if (moveDirection.magnitude > 0.1f)
                 {
-                    if (Input.GetKeyDown(crouchKey))
-                        currentState = PlayerState.Crouch;
+                    // Check if we should start sprinting immediately from idle
+                    currentState = PlayerState.Run;
                 }
-                
-            break; 
+                if (Input.GetKeyDown(jumpKey) && isGrounded) currentState = PlayerState.Jump;
+                if (isGrounded && Input.GetKeyDown(crouchKey)) currentState = PlayerState.Crouch;
+                break;
 
-            case PlayerState.Run: 
-                if (moveDirection.magnitude <= 0.1f) 
-                    currentState = PlayerState.Idle; 
-                if (Input.GetKeyDown(jumpKey) && isGrounded) 
-                    currentState = PlayerState.Jump;
+            case PlayerState.Run:
+                if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
 
-                if (isGrounded)
+                // Transition TO Sprint
+                if (Input.GetKey(RunKey) && isGrounded) currentState = PlayerState.Sprint;
+
+                if (Input.GetKeyDown(jumpKey) && isGrounded) currentState = PlayerState.Jump;
+                if (isGrounded && Input.GetKeyDown(crouchKey))
                 {
-                    if (Input.GetKeyDown(crouchKey))
-                    {
-                        if (rb.linearVelocity.magnitude > slideMinSpeed)
-                            StartSlideState();
-                        else currentState = PlayerState.Crouch;
-                    }
+                    if (rb.linearVelocity.magnitude > slideMinSpeed) StartSlideState();
+                    else currentState = PlayerState.Crouch;
                 }
-            break; 
+                break;
+
+            case PlayerState.Sprint:
+                // Transition OUT of Sprint
+                if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
+                if (!Input.GetKey(RunKey)) currentState = PlayerState.Run;
+
+                if (Input.GetKeyDown(jumpKey) && isGrounded) currentState = PlayerState.Jump;
+                if (isGrounded && Input.GetKeyDown(crouchKey)) StartSlideState(); // Sprinting usually slides
+                break;
 
             case PlayerState.Jump: 
-                if (isGrounded) currentState = moveDirection.magnitude > 0.1f ? PlayerState.Run : PlayerState.Idle; 
+                if (isGrounded) 
+                    currentState = moveDirection.magnitude > 0.1f ? PlayerState.Run : PlayerState.Idle; 
             break; 
 
             case PlayerState.Crouch:
@@ -143,7 +152,8 @@ public class Player : MonoBehaviour
                 } 
                 // If crouch key pressed again while moving fast ? slide
                 if (Input.GetKeyDown(crouchKey) && rb.linearVelocity.magnitude > slideMinSpeed) 
-                { StartSlideState();
+                { 
+                    StartSlideState();
                     break; 
                 } 
                 // Stay crouched only while key is held
@@ -162,8 +172,10 @@ public class Player : MonoBehaviour
                     EndSlideState();
                     TryStand();
                 }
-            break; 
-        } 
+            break;
+
+            
+        }
     } 
 
     // ????????????????????????????????????????????? 
@@ -172,11 +184,15 @@ public class Player : MonoBehaviour
     void ApplyStateMovement() 
     { 
         switch (currentState) 
-        { 
-            case PlayerState.Idle: 
-            case PlayerState.Run: 
-                MoveNormally();
-            break;
+        {
+            case PlayerState.Idle:
+            case PlayerState.Run:
+                Move(moveSpeed); // Pass the speed as a parameter
+                break;
+
+            case PlayerState.Sprint:
+                Move(SprintSpeed);
+                break;
 
             case PlayerState.Jump: 
                 MoveNormally(); 
@@ -190,18 +206,36 @@ public class Player : MonoBehaviour
                 rb.AddForce(slideDirection * slideSpeed * Time.fixedDeltaTime, ForceMode.Acceleration);
             break; 
         } 
-    } 
+    }
 
     // ????????????????????????????????????????????? 
     // MOVEMENT HELPERS 
     // ?????????????????????????????????????????????
+    void Move(float speed)
+    {
+        Vector3 desiredVelocity = moveDirection * speed;
+        Vector3 currentVelocity = rb.linearVelocity;
+        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+        rb.AddForce(velocityChange, ForceMode.VelocityChange);
+        if (Input.GetKey(jumpKey) && isGrounded) Jump();
+    }
     void MoveNormally() 
     { 
         Vector3 desiredVelocity = moveDirection * moveSpeed; 
         Vector3 currentVelocity = rb.linearVelocity; 
-        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z); rb.AddForce(velocityChange, ForceMode.VelocityChange); 
+        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z); 
+        rb.AddForce(velocityChange, ForceMode.VelocityChange); 
         if (Input.GetKey(jumpKey) && isGrounded) Jump(); 
     } 
+
+    void Sprinting()
+    {
+        Vector3 desiredVelocity = moveDirection * SprintSpeed;
+        Vector3 currentVelocity = rb.linearVelocity;
+        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+        rb.AddForce(velocityChange, ForceMode.VelocityChange);
+        if (Input.GetKey(jumpKey) && isGrounded) Jump();
+    }
 
     void Jump() 
     { 
@@ -289,7 +323,7 @@ public class Player : MonoBehaviour
         );
 
         rb.linearVelocity = newVelocity;
-        // Still allow jumping if you want
+
         if (Input.GetKey(jumpKey) && isGrounded)
             Jump();
     }
