@@ -14,62 +14,41 @@ public class Damage : MonoBehaviour
 
     bool isDamaging;
 
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         if (type == damageType.moving || type == damageType.homing)
         {
             Destroy(gameObject, destroyTime);
-
-            if (type == damageType.moving)
+            if (type == damageType.moving && rb != null)
             {
+                // In Unity 6 (2026), use linearVelocity for Rigidbody movement
                 rb.linearVelocity = transform.forward * speed;
             }
         }
-
-    }
-
-    // Update is called once per frame
-    void Update()
-    {
-        if (type == damageType.homing)
-        {
-            //rb.linearVelocity = (GameManager.instance.player.transform.position - transform.position).normalized * speed * Time.deltaTime;
-        }
-
     }
 
     private void OnTriggerEnter(Collider other)
     {
-        if (other.isTrigger)
-        {
-            return;
-        }
-
+        if (other.isTrigger) return;
 
         IDamage dmg = other.GetComponent<IDamage>();
 
         if (dmg != null && type != damageType.DOT)
         {
-            dmg.TakeDamage(damageAmount);
+            // PASS transform.position so knockback knows the direction
+            dmg.TakeDamage(damageAmount, transform.position);
         }
 
         if (type == damageType.homing || type == damageType.moving)
         {
             Destroy(gameObject);
         }
-
     }
-
-
 
     private void OnTriggerStay(Collider other)
     {
-        if (other.isTrigger)
-        {
-            return;
-        }
+        if (other.isTrigger) return;
+
         IDamage dmg = other.GetComponent<IDamage>();
         if (dmg != null && type == damageType.DOT && !isDamaging)
         {
@@ -80,9 +59,9 @@ public class Damage : MonoBehaviour
     IEnumerator damageOther(IDamage d)
     {
         isDamaging = true;
-        d.TakeDamage(damageAmount);
+        // PASS transform.position here as well
+        d.TakeDamage(damageAmount, transform.position);
         yield return new WaitForSeconds(damageRate);
         isDamaging = false;
     }
-
 }
