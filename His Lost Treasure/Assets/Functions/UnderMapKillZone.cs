@@ -11,7 +11,7 @@ public class UnderMapKillZone : MonoBehaviour
            Player HP = other.GetComponent<Player>();
             if (HP != null)
             {
-                HP.TakeDamage(damageAmount);
+                HP.TakeDamage(damageAmount, transform.position);
             }
 
             RespawnManager.Instance.RespawnPlayer(other.gameObject);
