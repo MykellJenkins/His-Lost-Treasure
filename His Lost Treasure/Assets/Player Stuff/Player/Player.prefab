@@ -232,7 +232,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ec22535002ebda4b8a6ef52ad05e804, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
+  cam: {fileID: 0}
   currentState: 0
+  maxLives: 3
+  isHurt: 0
+  damageStunDuration: 2
+  damageTimer: 10
+  invincibilityTimeAfterDamage: 10
   moveSpeed: 5
   forwardKey: 119
   leftKey: 97
@@ -241,6 +247,8 @@ MonoBehaviour:
   SprintSpeed: 20
   RunKey: 304
   jumpForce: 10
+  jumpLeft: 2
+  jumps: 2
   fallMultiplier: 2.5
   ascendMultiplier: 2
   jumpKey: 32
