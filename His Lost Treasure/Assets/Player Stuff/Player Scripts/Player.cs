@@ -13,7 +13,8 @@ public class Player : MonoBehaviour
 { 
     // Components
     private Rigidbody rb; 
-    private CapsuleCollider capsule; 
+    private CapsuleCollider capsule;
+    public Transform cam;
 
     // State Machine
     public PlayerState currentState = PlayerState.Idle; 
@@ -31,7 +32,9 @@ public class Player : MonoBehaviour
     public KeyCode RunKey = KeyCode.LeftShift;
 
     // Jumping
-    public float jumpForce = 10f; 
+    public float jumpForce = 10f;
+    public int jumpLeft = 2;
+    public int jumps = 2;
     public float fallMultiplier = 2.5f; 
     public float ascendMultiplier = 2f; 
     public KeyCode jumpKey = KeyCode.Space; 
@@ -63,7 +66,8 @@ public class Player : MonoBehaviour
         rb.freezeRotation = true; 
         capsule = GetComponent<CapsuleCollider>(); 
         playerHeight = capsule.height; 
-        targetHeight = playerHeight; 
+        targetHeight = playerHeight;
+        if (cam == null) cam = Camera.main.transform;
     } 
     
     void Update() 
@@ -84,34 +88,61 @@ public class Player : MonoBehaviour
     // INPUT 
     // ?????????????????????????????????????????????
     void ReadMovementInput() 
-    { 
-        moveDirection = Vector3.zero; 
-        if (Input.GetKey(forwardKey)) 
-            moveDirection += Vector3.forward; 
-        if (Input.GetKey(backKey)) 
-            moveDirection += Vector3.back; 
-        if (Input.GetKey(leftKey)) 
-            moveDirection += Vector3.left; 
-        if (Input.GetKey(rightKey)) 
-            moveDirection += Vector3.right; 
-        if (moveDirection.magnitude > 1f) 
+    {
+        float horizontal = 0;
+        float vertical = 0;
+
+        if (Input.GetKey(forwardKey)) vertical += 1;
+        if (Input.GetKey(backKey)) vertical -= 1;
+        if (Input.GetKey(leftKey)) horizontal -= 1;
+        if (Input.GetKey(rightKey)) horizontal += 1;
+
+        // 1. Get Camera directions
+        Vector3 camForward = cam.forward;
+        Vector3 camRight = cam.right;
+
+        // 2. Flatten them (set Y to 0) so player doesn't move into the floor
+        camForward.y = 0;
+        camRight.y = 0;
+        camForward.Normalize();
+        camRight.Normalize();
+
+        // 3. Calculate direction based on flattened camera vectors
+        moveDirection = (camForward * vertical) + (camRight * horizontal);
+
+        if (moveDirection.magnitude > 1f)
             moveDirection.Normalize();
+
+        // 4. (Optional) Rotate player to face move direction
+        if (moveDirection != Vector3.zero)
+        {
+            // Smoothly rotate the player model to face where they are moving
+            transform.forward = Vector3.Slerp(transform.forward, moveDirection, Time.deltaTime * 10f);
+        }
     } 
 
     // ????????????????????????????????????????????? 
     // STATE TRANSITIONS 
     // ?????????????????????????????????????????????
     void HandleStateTransitions() 
-    { 
+    {
+        if (Input.GetKeyDown(jumpKey) && jumpLeft > 0)
+        {
+            currentState = PlayerState.Jump;
+            Jump(); // Call the physics logic immediately
+            return; // Exit early so we don't overwrite the state below
+        }
+
         switch (currentState) 
         {
+
             case PlayerState.Idle:
                 if (moveDirection.magnitude > 0.1f)
                 {
                     // Check if we should start sprinting immediately from idle
                     currentState = PlayerState.Run;
                 }
-                if (Input.GetKeyDown(jumpKey) && isGrounded) currentState = PlayerState.Jump;
+                //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
                 if (isGrounded && Input.GetKeyDown(crouchKey)) currentState = PlayerState.Crouch;
                 break;
 
@@ -121,7 +152,7 @@ public class Player : MonoBehaviour
                 // Transition TO Sprint
                 if (Input.GetKey(RunKey) && isGrounded) currentState = PlayerState.Sprint;
 
-                if (Input.GetKeyDown(jumpKey) && isGrounded) currentState = PlayerState.Jump;
+                //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
                 if (isGrounded && Input.GetKeyDown(crouchKey))
                 {
                     if (rb.linearVelocity.magnitude > slideMinSpeed) StartSlideState();
@@ -134,7 +165,7 @@ public class Player : MonoBehaviour
                 if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
                 if (!Input.GetKey(RunKey)) currentState = PlayerState.Run;
 
-                if (Input.GetKeyDown(jumpKey) && isGrounded) currentState = PlayerState.Jump;
+                //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
                 if (isGrounded && Input.GetKeyDown(crouchKey)) StartSlideState(); // Sprinting usually slides
                 break;
 
@@ -202,9 +233,13 @@ public class Player : MonoBehaviour
                 ApplyCrouchMovement();
                 break; 
 
-            case PlayerState.Slide: 
-                rb.AddForce(slideDirection * slideSpeed * Time.fixedDeltaTime, ForceMode.Acceleration);
-            break; 
+            case PlayerState.Slide:
+                float forceMultiplier = slideTimer / slideDuration;
+                rb.AddForce(slideDirection * slideSpeed * forceMultiplier, ForceMode.Acceleration);
+
+                // Friction: Help the player slow down
+                rb.linearDamping = 1f; // Use rb.drag in older Unity versions
+                break; 
         } 
     }
 
@@ -217,7 +252,7 @@ public class Player : MonoBehaviour
         Vector3 currentVelocity = rb.linearVelocity;
         Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
         rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        if (Input.GetKey(jumpKey) && isGrounded) Jump();
+        if (Input.GetKeyDown(jumpKey) && jumpLeft > 0) Jump();
     }
     void MoveNormally() 
     { 
@@ -225,7 +260,7 @@ public class Player : MonoBehaviour
         Vector3 currentVelocity = rb.linearVelocity; 
         Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z); 
         rb.AddForce(velocityChange, ForceMode.VelocityChange); 
-        if (Input.GetKey(jumpKey) && isGrounded) Jump(); 
+        if (Input.GetKeyDown(jumpKey) && jumpLeft > 0) Jump(); 
     } 
 
     void Sprinting()
@@ -239,7 +274,13 @@ public class Player : MonoBehaviour
 
     void Jump() 
     { 
-        rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z); 
+        rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
+        jumpLeft--;
+        if (targetHeight == crouchHeight)
+        {
+            targetHeight = playerHeight;
+        }
+        
     } 
 
     void ApplyJumpPhysics() 
@@ -254,12 +295,17 @@ public class Player : MonoBehaviour
     // CROUCH & SLIDE 
     // ?????????????????????????????????????????????
     void StartSlideState() 
-    { 
-        currentState = PlayerState.Slide; 
-        slideDirection = moveDirection.magnitude > 0.1f ? moveDirection.normalized : transform.forward; 
-        slideTimer = slideDuration; 
-        targetHeight = crouchHeight; 
-        rb.AddForce(slideDirection * slideSpeed, ForceMode.VelocityChange); 
+    {
+        currentState = PlayerState.Slide;
+        slideTimer = slideDuration;
+
+        // Capture direction: if moving, slide that way; if still, slide forward
+        slideDirection = moveDirection.magnitude > 0.1f ? moveDirection : transform.forward;
+
+        targetHeight = crouchHeight;
+
+        // Optional: Add an initial burst of speed
+        rb.AddForce(slideDirection * slideSpeed, ForceMode.Impulse);
     } 
 
     void Crouch()
@@ -280,24 +326,29 @@ public class Player : MonoBehaviour
     }
 
     void TryStand() 
-    { 
-        bool blocked = Physics.Raycast(transform.position, Vector3.up, (playerHeight - crouchHeight) / 2 + ceilingCheckDistance, ceilingMask); 
-        if (!blocked) 
-        { 
+    {
+        // Check if there is a ceiling above the player
+        bool ceilingAbove = Physics.Raycast(transform.position, Vector3.up, playerHeight * 0.5f + 0.2f, ceilingMask);
+
+        if (!ceilingAbove)
+        {
             targetHeight = playerHeight;
-            if (moveDirection.magnitude > 0.1f) 
-                currentState = PlayerState.Run; 
-            else 
-                currentState = PlayerState.Idle;
+            currentState = moveDirection.magnitude > 0.1f ? PlayerState.Run : PlayerState.Idle;
         }
-        Debug.Log("TryStand called. Blocked = " + blocked);
+        else
+        {
+            // Stuck under something, stay crouched
+            currentState = PlayerState.Crouch;
+            targetHeight = crouchHeight;
+        }
+        Debug.Log("TryStand called. Blocked = " + ceilingAbove);
         Debug.Log("Standing. targetHeight = " + targetHeight);
-        Debug.DrawRay(transform.position + Vector3.up * (crouchHeight / 2f), Vector3.up * ((playerHeight - crouchHeight) + ceilingCheckDistance), blocked ? Color.red : Color.green);
+        Debug.DrawRay(transform.position + Vector3.up * (crouchHeight / 2f), Vector3.up * ((playerHeight - crouchHeight) + ceilingCheckDistance), ceilingAbove ? Color.red : Color.green);
     } 
 
     void SmoothCrouchHeight() 
-    { 
-        capsule.height = Mathf.Lerp(capsule.height, targetHeight, Time.deltaTime * crouchSpeed); 
+    {
+        capsule.height = Mathf.Lerp(capsule.height, targetHeight, Time.deltaTime * 10f);
     } 
 
     // ????????????????????????????????????????????? 
@@ -307,6 +358,11 @@ public class Player : MonoBehaviour
     { 
         Vector3 origin = transform.position + Vector3.up * 0.1f; 
         isGrounded = Physics.Raycast(origin, Vector3.down, playerHeight / 2 + 0.2f, groundLayer);
+
+        if (isGrounded && rb.linearVelocity.y <= 0.1f)
+        {
+            jumpLeft = jumps; // Reset jumps when we touch the floor
+        }
     }
 
     void ApplyCrouchMovement()
