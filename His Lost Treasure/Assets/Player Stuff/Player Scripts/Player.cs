@@ -7,9 +7,10 @@ public enum PlayerState
     Jump, 
     Crouch, 
     Slide,
-    Sprint
+    Sprint,
+    Damage
 }
-public class Player : MonoBehaviour 
+public class Player : MonoBehaviour, IDamage
 { 
     // Components
     private Rigidbody rb; 
@@ -18,6 +19,16 @@ public class Player : MonoBehaviour
 
     // State Machine
     public PlayerState currentState = PlayerState.Idle; 
+
+    // Lives
+    public int maxLives = 3;
+    public bool isHurt;
+
+    // dmage effect
+    public float damageStunDuration = 0.5f;
+    private float damageTimer;
+    private Vector3 damageSourcePosition;
+    private PlayerDamageEffects damageEffects;
 
     // Movement
     public float moveSpeed = 5f; 
@@ -68,6 +79,7 @@ public class Player : MonoBehaviour
         playerHeight = capsule.height; 
         targetHeight = playerHeight;
         if (cam == null) cam = Camera.main.transform;
+        damageEffects = GetComponent<PlayerDamageEffects>();
     } 
     
     void Update() 
@@ -144,13 +156,15 @@ public class Player : MonoBehaviour
                 }
                 //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
                 if (isGrounded && Input.GetKeyDown(crouchKey)) currentState = PlayerState.Crouch;
-                break;
+                if (isHurt == true) currentState = PlayerState.Damage;
+            break;
 
             case PlayerState.Run:
                 if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
 
                 // Transition TO Sprint
                 if (Input.GetKey(RunKey) && isGrounded) currentState = PlayerState.Sprint;
+                if (isHurt == true) currentState = PlayerState.Damage;
 
                 //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
                 if (isGrounded && Input.GetKeyDown(crouchKey))
@@ -164,6 +178,7 @@ public class Player : MonoBehaviour
                 // Transition OUT of Sprint
                 if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
                 if (!Input.GetKey(RunKey)) currentState = PlayerState.Run;
+                if (isHurt == true) currentState = PlayerState.Damage;
 
                 //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
                 if (isGrounded && Input.GetKeyDown(crouchKey)) StartSlideState(); // Sprinting usually slides
@@ -203,9 +218,26 @@ public class Player : MonoBehaviour
                     EndSlideState();
                     TryStand();
                 }
+
+                if (isHurt == true)
+                {
+                    EndSlideState();
+                    TryStand();
+                    currentState = PlayerState.Damage;
+                }
+               
             break;
 
-            
+                case PlayerState.Damage:
+                damageTimer -= Time.deltaTime;
+                if (damageTimer <= 0 && isGrounded)
+                {
+                    isHurt = false;
+                    currentState = PlayerState.Idle;
+                }
+                break;
+
+
         }
     } 
 
@@ -213,7 +245,8 @@ public class Player : MonoBehaviour
     // STATE MOVEMENT 
     // ?????????????????????????????????????????????
     void ApplyStateMovement() 
-    { 
+    {
+        if (currentState == PlayerState.Damage) return;
         switch (currentState) 
         {
             case PlayerState.Idle:
@@ -262,15 +295,6 @@ public class Player : MonoBehaviour
         rb.AddForce(velocityChange, ForceMode.VelocityChange); 
         if (Input.GetKeyDown(jumpKey) && jumpLeft > 0) Jump(); 
     } 
-
-    void Sprinting()
-    {
-        Vector3 desiredVelocity = moveDirection * SprintSpeed;
-        Vector3 currentVelocity = rb.linearVelocity;
-        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-        rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        if (Input.GetKey(jumpKey) && isGrounded) Jump();
-    }
 
     void Jump() 
     { 
@@ -382,5 +406,21 @@ public class Player : MonoBehaviour
 
         if (Input.GetKey(jumpKey) && isGrounded)
             Jump();
+    }
+
+    public void TakeDamage(int amount, Vector3 attackerPosition)
+    {
+        if (isHurt) return; // Prevent double-triggering
+
+        maxLives -= amount;
+        isHurt = true;
+        currentState = PlayerState.Damage;
+        damageTimer = damageStunDuration; // Ensure this is set to ~0.5f or higher
+
+        // Trigger the actual physics push
+        if (damageEffects != null)
+        {
+            damageEffects.ApplyKnockback(attackerPosition);
+        }
     }
 }
