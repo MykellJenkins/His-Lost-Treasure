@@ -23,7 +23,8 @@ public class Player : MonoBehaviour, IDamage
 
     // Lives
     public int maxLives = 3;
-    private bool isHurt = false;
+    public bool isHurt = false;
+    bool isMovingUp;
 
     // dmage effect
     public float damageStunDuration = 2f;
@@ -80,6 +81,13 @@ public class Player : MonoBehaviour, IDamage
     // ????????????????????????????????????????????? 
     // UNITY METHODS 
     // ?????????????????????????????????????????????
+    void OnEnable()
+    {
+        currentState = PlayerState.Idle;
+        isHurt = false;
+        invincibilityDuration = 0;
+    }
+
     void Start() 
     {
         rb = GetComponent<Rigidbody>(); 
@@ -98,7 +106,11 @@ public class Player : MonoBehaviour, IDamage
         ReadMovementInput(); 
         HandleStateTransitions(); 
         SmoothCrouchHeight(); 
-
+        if (rb.linearVelocity == transform.up)
+        {
+            isMovingUp = true;
+        }
+        else { isMovingUp = false;}
         if (invincibilityDuration > 0)
         {
             invincibilityDuration -= Time.deltaTime;
@@ -502,5 +514,18 @@ public class Player : MonoBehaviour, IDamage
         {
             r.enabled = visible;
         }
+    }
+
+    public void ResetPlayer()
+    {
+        currentState = PlayerState.Idle;
+        isHurt = false;
+        invincibilityDuration = 0;
+        damageTimer = 0;
+
+        rb.isKinematic = false;
+        rb.linearVelocity = Vector3.zero;
+
+        enabled = true;
     }
 }

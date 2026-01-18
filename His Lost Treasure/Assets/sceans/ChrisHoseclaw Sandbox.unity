@@ -252,6 +252,135 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 37877917}
   m_CullTransparentMesh: 1
+--- !u!1 &38995916
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 38995918}
+  - component: {fileID: 38995917}
+  m_Layer: 0
+  m_Name: Audio Source
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!82 &38995917
+AudioSource:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 38995916}
+  m_Enabled: 1
+  serializedVersion: 4
+  OutputAudioMixerGroup: {fileID: 0}
+  m_audioClip: {fileID: 0}
+  m_Resource: {fileID: 8300000, guid: 08c262aabe07d5d469b6838a4b7456a5, type: 3}
+  m_PlayOnAwake: 1
+  m_Volume: 1
+  m_Pitch: 1
+  Loop: 0
+  Mute: 0
+  Spatialize: 0
+  SpatializePostEffects: 0
+  Priority: 128
+  DopplerLevel: 1
+  MinDistance: 1
+  MaxDistance: 500
+  Pan2D: 0
+  rolloffMode: 0
+  BypassEffects: 0
+  BypassListenerEffects: 0
+  BypassReverbZones: 0
+  rolloffCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    - serializedVersion: 3
+      time: 1
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  panLevelCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  spreadCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 0
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+  reverbZoneMixCustomCurve:
+    serializedVersion: 2
+    m_Curve:
+    - serializedVersion: 3
+      time: 0
+      value: 1
+      inSlope: 0
+      outSlope: 0
+      tangentMode: 0
+      weightedMode: 0
+      inWeight: 0.33333334
+      outWeight: 0.33333334
+    m_PreInfinity: 2
+    m_PostInfinity: 2
+    m_RotationOrder: 4
+--- !u!4 &38995918
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 38995916}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 425.07608, y: 0, z: 193.18309}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &74547804
 GameObject:
   m_ObjectHideFlags: 0
@@ -1762,7 +1891,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 839583983}
         m_TargetAssemblyTypeName: ButtonFunctions, Assembly-CSharp
-        m_MethodName: restart
+        m_MethodName: Restart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -3667,7 +3796,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 839583983}
         m_TargetAssemblyTypeName: ButtonFunctions, Assembly-CSharp
-        m_MethodName: restart
+        m_MethodName: Restart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4340,7 +4469,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 839583983}
         m_TargetAssemblyTypeName: ButtonFunctions, Assembly-CSharp
-        m_MethodName: restart
+        m_MethodName: Restart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -5477,6 +5606,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::Damage
   type: 1
   rb: {fileID: 0}
+  crush: {fileID: 0}
+  player: {fileID: 0}
   damageAmount: 1
   speed: 0
   damageRate: 0.5
@@ -7085,6 +7216,7 @@ GameObject:
   m_Component:
   - component: {fileID: 6701143103583169637}
   - component: {fileID: 8289364667754408449}
+  - component: {fileID: 8289364667754408450}
   m_Layer: 0
   m_Name: GameManager
   m_TagString: Untagged
@@ -8623,9 +8755,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ec22535002ebda4b8a6ef52ad05e804, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
-  cam: {fileID: 0}
   currentState: 0
   maxLives: 3
+  isHurt: 0
   damageStunDuration: 0.5
   damageTimer: 10
   invincibilityTimeAfterDamage: 2
@@ -8655,6 +8787,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 16
   ceilingCheckDistance: 0.1
+  flashInterval: 0.1
 --- !u!23 &8055988269614975517
 MeshRenderer:
   m_ObjectHideFlags: 0
@@ -8790,12 +8923,28 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   menuActive: {fileID: 0}
   menuPause: {fileID: 511746026}
+  menuSetting: {fileID: 0}
   menuWin: {fileID: 1450999878}
   menuLose: {fileID: 347445995}
+  gameplayMusic: {fileID: 38995917}
+  pauseMenuMusic: {fileID: 38995917}
   player: {fileID: 3339361588770738263}
   playerScript: {fileID: 7990297300725257690}
+  rmInstance: {fileID: 0}
   isPaused: 0
   endOfLevel: 0
+--- !u!114 &8289364667754408450
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 4894428912678247057}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 436196bdc954a9d4a9daa3f07236bad2, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::RespawnManager
 --- !u!1 &8390729587745472173
 GameObject:
   m_ObjectHideFlags: 0
@@ -9064,3 +9213,4 @@ SceneRoots:
   - {fileID: 875813837}
   - {fileID: 382358458345409227}
   - {fileID: 1300998792481363678}
+  - {fileID: 38995918}
