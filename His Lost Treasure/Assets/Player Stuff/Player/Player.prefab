@@ -232,10 +232,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ec22535002ebda4b8a6ef52ad05e804, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
-  cam: {fileID: 0}
   currentState: 0
   maxLives: 3
-  isHurt: 0
   damageStunDuration: 2
   damageTimer: 10
   invincibilityTimeAfterDamage: 10
@@ -265,6 +263,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 16
   ceilingCheckDistance: 0.1
+  flashInterval: 0.1
 --- !u!33 &7403530034870996860
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -298,7 +297,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 4ebff24ca84e2c54291201468181d99d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
