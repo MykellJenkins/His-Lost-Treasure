@@ -233,6 +233,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
   currentState: 0
+  maxLives: 3
+  damageStunDuration: 2
+  damageTimer: 10
+  invincibilityTimeAfterDamage: 10
   moveSpeed: 5
   forwardKey: 119
   leftKey: 97
@@ -241,6 +245,8 @@ MonoBehaviour:
   SprintSpeed: 20
   RunKey: 304
   jumpForce: 10
+  jumpLeft: 2
+  jumps: 2
   fallMultiplier: 2.5
   ascendMultiplier: 2
   jumpKey: 32
@@ -257,6 +263,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 16
   ceilingCheckDistance: 0.1
+  flashInterval: 0.1
 --- !u!33 &7403530034870996860
 MeshFilter:
   m_ObjectHideFlags: 0
@@ -290,7 +297,7 @@ MeshRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: 31321ba15b8f8eb4c954353edc038b1d, type: 2}
+  - {fileID: 2100000, guid: 4ebff24ca84e2c54291201468181d99d, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
