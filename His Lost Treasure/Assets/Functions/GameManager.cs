@@ -18,14 +18,27 @@ public class GameManager : MonoBehaviour
 
     public GameObject player;
     public Player playerScript;
+    public RespawnManager rmInstance;
 
     public bool isPaused = false;
     public bool endOfLevel;
     
     float timeScaleOG;
-    
+
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
+    void Awake()
+    {
+        if (instance != null && instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+
+        instance = this;
+        DontDestroyOnLoad(gameObject);
+    }
+
     void Start()
     {
         instance = this;
@@ -33,7 +46,7 @@ public class GameManager : MonoBehaviour
         endOfLevel = false;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<Player>();
-
+        rmInstance = RespawnManager.Instance;
         AudioListener.volume = PlayerPrefs.GetFloat("Volume", 5f);
         gameplayMusic.Play();
     }
@@ -41,7 +54,8 @@ public class GameManager : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetButtonDown("Cancel"))
+        if (isPaused) return;
+        if (Input.GetKeyDown(KeyCode.P))
         {
             if(menuActive == null)
             {
@@ -56,11 +70,15 @@ public class GameManager : MonoBehaviour
                 stateBackToPause();
             }
         }
-        else if(GameManager.instance.playerScript.maxLives == 0)
+        else if((GameManager.instance.playerScript.maxLives == 2 || GameManager.instance.playerScript.maxLives == 1) && GameManager.instance.playerScript.isHurt)
+        {
+            rmInstance.RespawnPlayer(player);
+        }
+        else if (GameManager.instance.playerScript.maxLives == 0)
         {
             stateLose();
         }
-        else if(endOfLevel == true)
+        else if (endOfLevel == true)
         {
             stateWin();
         }
@@ -82,7 +100,7 @@ public class GameManager : MonoBehaviour
     public void stateUnpause()
     {
         isPaused = false;
-        Time.timeScale = timeScaleOG;
+        Time.timeScale = 1f;
         Cursor.visible = false;
         Cursor.lockState = CursorLockMode.Locked;
       

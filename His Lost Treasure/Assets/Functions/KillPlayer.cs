@@ -26,7 +26,7 @@ public class KillPlayer : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             Scene currentScene = SceneManager.GetActiveScene();
-            SceneManager.LoadScene(currentScene.name);
+            //SceneManager.LoadScene(currentScene.name);
             //player.transform.position = respawnPoint.position;
         }
     }

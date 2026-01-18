@@ -6,7 +6,7 @@ public class CheckPoint : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            RespawnManager.Instance.SetCheckPoint(transform.position);
+            GameManager.instance.rmInstance.SetCheckPoint(transform.position);
         }
     }
 
