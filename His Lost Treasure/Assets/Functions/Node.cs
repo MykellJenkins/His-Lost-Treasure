@@ -21,8 +21,12 @@ public class Node : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-    
+        if(GameManager.instance.endOfLevel == true)
+        {
+            CompleteLevel();
+        }
     }
+
     void CompleteLevel()
     {
         //for achievments later

@@ -12,6 +12,8 @@ public class EnemyAI : MonoBehaviour, IDamage
     [SerializeField] int FOV;
     [SerializeField] int roamDist;
     [SerializeField] int roamPauseTime;
+    [SerializeField] int animTranSpeed;
+    [SerializeField] Animator anim; 
 
     [Header("---Stats---")]
     [SerializeField] int HP;
@@ -41,17 +43,39 @@ public class EnemyAI : MonoBehaviour, IDamage
     void Update()
     {
         attackTimer += Time.deltaTime;
-        if(agent.remainingDistance < 0.01f)
+        if (agent.remainingDistance < 0.01f)
             roamTimer += Time.deltaTime;
+        locomotionAnim();
+        if (playerInRange && !canSeePlayer())
+        {
+            checkRoam();
+        }
+        if (playerInRange && canSeePlayer() && (agent.remainingDistance <= agent.stoppingDistance))
+        {
+            attack();
+        }
+        if (!playerInRange)
+        {
+            checkRoam();
+        }
+    }
 
-        if(playerInRange && !canSeePlayer())
-        {
-            checkRoam();
-        }
-        else if (!playerInRange)
-        {
-            checkRoam();
-        }
+    void locomotionAnim()
+    {
+        float agentSpeedCur = agent.velocity.normalized.magnitude;
+        float agentSpeedAnim = anim.GetFloat("Speed");
+
+        anim.SetFloat("Speed", Mathf.MoveTowards(agentSpeedAnim, agentSpeedCur, Time.deltaTime * animTranSpeed));
+    }
+
+    void attackAnimation()
+    {
+        anim.SetTrigger("Attack");
+    }
+
+    IEnumerator AttackTiming()
+    {
+        yield return new WaitForSeconds(attackRate);
     }
 
     void checkRoam()
@@ -79,12 +103,12 @@ public class EnemyAI : MonoBehaviour, IDamage
     {
         attackTimer = 0f;
 
-
+        attackAnimation();
 
         //Q: How do I get him to do the animation and damage the player?    ?
         //First: find the player                                            x
         //Second: get in range to the player                                x
-        //Third: play animation toward the player                           ?
+        //Third: play animation toward the player                           x
         //Fourth: damage the player hopefully if I set up the sword right   ?
 
     }
@@ -104,10 +128,6 @@ public class EnemyAI : MonoBehaviour, IDamage
                 if (agent.remainingDistance <= agent.stoppingDistance)
                 {
                     faceTarget();
-                }
-                if (attackTimer >= attackRate)
-                {
-                    attack();
                 }
 
                 agent.stoppingDistance = stoppingDistOG;
