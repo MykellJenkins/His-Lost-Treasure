@@ -10,7 +10,8 @@ public class ButtonFunctions : MonoBehaviour
 
     public void restart()
     {
-        GameManager.instance.rmInstance.RespawnPlayer(GameManager.instance.player);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        GameManager.instance.stateUnpause();
     }
 
     public void backToMenu()
