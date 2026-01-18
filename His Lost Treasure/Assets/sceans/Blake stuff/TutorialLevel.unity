@@ -6612,10 +6612,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 1583532301}
-  - {fileID: 3835332861544512810}
-  - {fileID: 6548664283348982794}
   - {fileID: 660360106}
-  - {fileID: 208712939971233405}
   - {fileID: 2003322099}
   - {fileID: 979997872}
   - {fileID: 71544209}
@@ -6630,4 +6627,3 @@ SceneRoots:
   - {fileID: 951321371}
   - {fileID: 1436691741}
   - {fileID: 1262113063}
-  - {fileID: 491115371}
