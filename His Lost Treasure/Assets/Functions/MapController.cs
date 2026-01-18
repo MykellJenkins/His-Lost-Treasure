@@ -9,6 +9,7 @@ public class MapController : MonoBehaviour
     [SerializeField] int playerSpeed;
     string levelName;
     bool isMoving;
+    bool movingForward;
     Vector3 target;
    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -28,11 +29,25 @@ public class MapController : MonoBehaviour
         if (currentNode.GetNextNode() != null && currentNode.GetNextNode().GetUnlocked())
         {
             
-            if (Input.GetButtonDown("Horizontal") && !isMoving)
+            if (Input.GetButtonDown("Right") && !isMoving)
             {
 
                 isMoving = true;
+                movingForward = true;
                 target = currentNode.GetNextNodePos().position;
+
+
+
+            }
+        } 
+            if (currentNode.GetPrevNode() != null && currentNode.GetPrevNode().GetUnlocked())
+        {
+            if (Input.GetButtonDown("Left") && !isMoving)
+            {
+
+                isMoving = true;
+                movingForward = false;
+                target = currentNode.GetPrevNodePos().position;
 
 
 
@@ -44,9 +59,14 @@ public class MapController : MonoBehaviour
             if (Vector3.Distance(player.transform.position, target) < 0.01f)
             {
                 isMoving = false;
-           
-                currentNode = currentNode.GetNextNode();
-                levelName = currentNode.GetNodeLevelName();
+                if (movingForward)
+                {
+                    currentNode = currentNode.GetNextNode();
+                }else if (!movingForward) 
+                {
+                    currentNode = currentNode.GetPrevNode();
+                }
+                    levelName = currentNode.GetNodeLevelName();
             }
         }
     }

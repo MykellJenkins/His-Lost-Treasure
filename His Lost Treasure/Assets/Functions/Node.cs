@@ -6,11 +6,12 @@ public class Node : MonoBehaviour
 {
     [SerializeField] bool unlocked;
     [SerializeField] Node nextNode;
+    [SerializeField] Node prevNode;
     [SerializeField] Transform nodePos;
     [SerializeField] string levelName;
+    //for achievments later
+    //bool levelCompleted;
 
-    bool levelCompleted;
-    
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
@@ -24,7 +25,8 @@ public class Node : MonoBehaviour
     }
     void CompleteLevel()
     {
-        levelCompleted = true;
+        //for achievments later
+        //levelCompleted = true;
         if (nextNode != null)
         {
             nextNode.Unlock();
@@ -34,9 +36,17 @@ public class Node : MonoBehaviour
     {
         unlocked=true;
     }
+    public Transform GetPrevNodePos()
+    {
+        return prevNode.transform; 
+    }
     public Transform GetNextNodePos()
     {
         return nextNode.transform;
+    }
+    public Node GetPrevNode() 
+    { 
+        return prevNode; 
     }
     public Node GetNextNode()
     {
