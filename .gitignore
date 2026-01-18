@@ -1,0 +1,9 @@
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################
+
+/His Lost Treasure/Assets/TextMesh Pro/Resources/Fonts & Materials/Starjhol SDF.asset
+/His Lost Treasure/Assets/sceans/Blake stuff/Main Menu.unity
+/His Lost Treasure/Assets/Functions/GameManager.cs
+/His Lost Treasure/Assets/Functions/ButtonFunctions.cs.meta
+/His Lost Treasure/Assets/Functions/ButtonFunctions.cs
