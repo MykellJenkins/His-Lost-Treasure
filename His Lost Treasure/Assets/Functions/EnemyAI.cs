@@ -26,6 +26,7 @@ public class EnemyAI : MonoBehaviour, IDamage
 
     float attackTimer;
     float roamTimer;
+
     float angleToPlayer;
     float stoppingDistOG;
 
