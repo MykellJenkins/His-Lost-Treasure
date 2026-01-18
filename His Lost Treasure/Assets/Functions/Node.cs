@@ -1,12 +1,14 @@
 using Unity.VectorGraphics;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class Node : MonoBehaviour
 {
     [SerializeField] bool unlocked;
     [SerializeField] Node nextNode;
     [SerializeField] Transform nodePos;
-    [SerializeField] Scene scene;
+    [SerializeField] string levelName;
+
     bool levelCompleted;
     
     // Start is called once before the first execution of Update after the MonoBehaviour is created
@@ -18,7 +20,7 @@ public class Node : MonoBehaviour
     // Update is called once per frame
     void Update()
     {
-     
+    
     }
     void CompleteLevel()
     {
@@ -43,6 +45,10 @@ public class Node : MonoBehaviour
     public bool GetUnlocked()
     {
         return unlocked;
+    }
+    public string GetNodeLevelName()
+    {
+        return levelName;
     }
 }
 

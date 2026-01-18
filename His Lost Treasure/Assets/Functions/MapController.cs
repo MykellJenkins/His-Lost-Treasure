@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 
 public class MapController : MonoBehaviour
@@ -6,6 +7,7 @@ public class MapController : MonoBehaviour
     [SerializeField] GameObject player;
     [SerializeField] Node currentNode;
     [SerializeField] int playerSpeed;
+    string levelName;
     bool isMoving;
     Vector3 target;
    
@@ -13,15 +15,20 @@ public class MapController : MonoBehaviour
     void Start()
     {
         player.transform.position = currentNode.transform.position;
+        levelName = currentNode.GetNodeLevelName();
     }
 
     // Update is called once per frame
     void Update()
     {
+        if (Input.GetButtonDown("Jump"))
+        {
+            SceneManager.LoadScene(levelName);
+        }
         if (currentNode.GetNextNode() != null && currentNode.GetNextNode().GetUnlocked())
         {
             
-            if (Input.GetButtonDown("right") && !isMoving)
+            if (Input.GetButtonDown("Horizontal") && !isMoving)
             {
 
                 isMoving = true;
@@ -37,7 +44,9 @@ public class MapController : MonoBehaviour
             if (Vector3.Distance(player.transform.position, target) < 0.01f)
             {
                 isMoving = false;
+           
                 currentNode = currentNode.GetNextNode();
+                levelName = currentNode.GetNodeLevelName();
             }
         }
     }
