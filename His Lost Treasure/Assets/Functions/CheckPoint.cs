@@ -9,4 +9,15 @@ public class CheckPoint : MonoBehaviour
             RespawnManager.Instance.SetCheckPoint(transform.position);
         }
     }
+
+    private void Update()
+    {
+        RotateItem();
+    }
+
+    void RotateItem()
+    {
+        Vector3 rotSpeed = new Vector3(0, 90, 0);
+        transform.Rotate(rotSpeed * Time.deltaTime);
+    }
 }
