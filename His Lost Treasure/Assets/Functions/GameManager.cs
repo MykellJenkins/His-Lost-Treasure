@@ -1,5 +1,6 @@
-using UnityEngine;
 using TMPro;
+using Unity.Cinemachine;
+using UnityEngine;
 using UnityEngine.UI;
 
 public class GameManager : MonoBehaviour
@@ -8,6 +9,7 @@ public class GameManager : MonoBehaviour
 
     [SerializeField] GameObject menuActive;
     [SerializeField] GameObject menuPause;
+    [SerializeField] GameObject menuSetting;
     [SerializeField] GameObject menuWin;
     [SerializeField] GameObject menuLose;
 
@@ -28,6 +30,8 @@ public class GameManager : MonoBehaviour
         endOfLevel = false;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<Player>();
+
+        AudioListener.volume = PlayerPrefs.GetFloat("Volume", 1f);
     }
 
     // Update is called once per frame
@@ -42,6 +46,10 @@ public class GameManager : MonoBehaviour
             else if(menuActive == menuPause)
             {
                 stateUnpause();
+            }
+            else if (menuActive == menuSetting)
+            {
+                stateBackToPause();
             }
         }
         else if(GameManager.instance.playerScript.maxLives == 0)
@@ -73,6 +81,20 @@ public class GameManager : MonoBehaviour
         menuActive.SetActive(false);
         menuActive = null;
     }
+    public void stateSettings()
+    {
+        menuActive.SetActive(false);
+        menuActive = menuSetting;
+        menuActive.SetActive(true);
+    }
+
+    //  BACK TO PAUSE MENU
+    public void stateBackToPause()
+    {
+        menuActive.SetActive(false);
+        menuActive = menuPause;
+        menuActive.SetActive(true);
+    }
 
     public void stateLose()
     {
@@ -92,6 +114,15 @@ public class GameManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.None;
         menuActive = menuWin;
         menuActive.SetActive(true);
+    }
+
+
+
+    // VOLUME SLIDER
+    public void SetVolume(float volume)
+    {
+        AudioListener.volume = volume;
+        PlayerPrefs.SetFloat("Volume", volume);
     }
 
     // If we need a goal count
