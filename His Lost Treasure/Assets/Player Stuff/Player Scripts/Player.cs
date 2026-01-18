@@ -22,13 +22,14 @@ public class Player : MonoBehaviour, IDamage
 
     // Lives
     public int maxLives = 3;
-    public bool isHurt;
+    private bool isHurt = false;
 
     // dmage effect
-    public float damageStunDuration = 0.5f;
-    private float damageTimer;
-    private Vector3 damageSourcePosition;
+    public float damageStunDuration = 2f;
+    public float damageTimer = 10;
     private PlayerDamageEffects damageEffects;
+    private float invincibilityDuration = 0;
+    public float invincibilityTimeAfterDamage = 2f;
 
     // Movement
     public float moveSpeed = 5f; 
@@ -88,6 +89,11 @@ public class Player : MonoBehaviour, IDamage
         ReadMovementInput(); 
         HandleStateTransitions(); 
         SmoothCrouchHeight(); 
+
+        if (invincibilityDuration > 0)
+        {
+            invincibilityDuration -= Time.deltaTime;
+        }
     } 
 
     void FixedUpdate() 
@@ -141,8 +147,8 @@ public class Player : MonoBehaviour, IDamage
         if (Input.GetKeyDown(jumpKey) && jumpLeft > 0)
         {
             currentState = PlayerState.Jump;
-            Jump(); // Call the physics logic immediately
-            return; // Exit early so we don't overwrite the state below
+            Jump(); 
+            return; 
         }
 
         switch (currentState) 
@@ -154,10 +160,11 @@ public class Player : MonoBehaviour, IDamage
                     // Check if we should start sprinting immediately from idle
                     currentState = PlayerState.Run;
                 }
-                //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
+
                 if (isGrounded && Input.GetKeyDown(crouchKey)) currentState = PlayerState.Crouch;
                 if (isHurt == true) currentState = PlayerState.Damage;
-            break;
+
+                break;
 
             case PlayerState.Run:
                 if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
@@ -166,7 +173,6 @@ public class Player : MonoBehaviour, IDamage
                 if (Input.GetKey(RunKey) && isGrounded) currentState = PlayerState.Sprint;
                 if (isHurt == true) currentState = PlayerState.Damage;
 
-                //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
                 if (isGrounded && Input.GetKeyDown(crouchKey))
                 {
                     if (rb.linearVelocity.magnitude > slideMinSpeed) StartSlideState();
@@ -178,7 +184,10 @@ public class Player : MonoBehaviour, IDamage
                 // Transition OUT of Sprint
                 if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
                 if (!Input.GetKey(RunKey)) currentState = PlayerState.Run;
-                if (isHurt == true) currentState = PlayerState.Damage;
+                if (invincibilityDuration <= 0)
+                {
+                    if (isHurt == true) currentState = PlayerState.Damage;
+                }
 
                 //if (Input.GetKeyDown(jumpKey) && isGrounded && jumpLeft > 0) currentState = PlayerState.Jump;
                 if (isGrounded && Input.GetKeyDown(crouchKey)) StartSlideState(); // Sprinting usually slides
@@ -218,23 +227,28 @@ public class Player : MonoBehaviour, IDamage
                     EndSlideState();
                     TryStand();
                 }
-
                 if (isHurt == true)
                 {
                     EndSlideState();
                     TryStand();
                     currentState = PlayerState.Damage;
                 }
-               
             break;
 
-                case PlayerState.Damage:
+            case PlayerState.Damage:
                 damageTimer -= Time.deltaTime;
+
                 if (damageTimer <= 0 && isGrounded)
                 {
                     isHurt = false;
                     currentState = PlayerState.Idle;
                 }
+
+                if (invincibilityDuration <= 0)
+                {
+                    invincibilityDuration = 0;
+                }
+
                 break;
 
 
@@ -285,7 +299,7 @@ public class Player : MonoBehaviour, IDamage
         Vector3 currentVelocity = rb.linearVelocity;
         Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
         rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        if (Input.GetKeyDown(jumpKey) && jumpLeft > 0) Jump();
+
     }
     void MoveNormally() 
     { 
@@ -293,7 +307,7 @@ public class Player : MonoBehaviour, IDamage
         Vector3 currentVelocity = rb.linearVelocity; 
         Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z); 
         rb.AddForce(velocityChange, ForceMode.VelocityChange); 
-        if (Input.GetKeyDown(jumpKey) && jumpLeft > 0) Jump(); 
+
     } 
 
     void Jump() 
@@ -379,8 +393,8 @@ public class Player : MonoBehaviour, IDamage
     // GROUND CHECK 
     // ?????????????????????????????????????????????
     void CheckGround() 
-    { 
-        Vector3 origin = transform.position + Vector3.up * 0.1f; 
+    {
+        Vector3 origin = transform.position + Vector3.up * 0.1f;
         isGrounded = Physics.Raycast(origin, Vector3.down, playerHeight / 2 + 0.2f, groundLayer);
 
         if (isGrounded && rb.linearVelocity.y <= 0.1f)
@@ -404,20 +418,27 @@ public class Player : MonoBehaviour, IDamage
 
         rb.linearVelocity = newVelocity;
 
-        if (Input.GetKey(jumpKey) && isGrounded)
-            Jump();
     }
 
     public void TakeDamage(int amount, Vector3 attackerPosition)
     {
-        if (isHurt) return; // Prevent double-triggering
+        if (isHurt == true) return;
 
-        maxLives -= amount;
-        isHurt = true;
-        currentState = PlayerState.Damage;
-        damageTimer = damageStunDuration; // Ensure this is set to ~0.5f or higher
+        if (invincibilityDuration <= 0)
+        {
+            maxLives -= amount;
+            isHurt = true;
+            currentState = PlayerState.Damage;
+            damageTimer = damageStunDuration;
+            invincibilityDuration = invincibilityTimeAfterDamage;
+        }
 
-        // Trigger the actual physics push
+        if (targetHeight == crouchHeight)
+        {
+            targetHeight = playerHeight;
+        }
+
+
         if (damageEffects != null)
         {
             damageEffects.ApplyKnockback(attackerPosition);
