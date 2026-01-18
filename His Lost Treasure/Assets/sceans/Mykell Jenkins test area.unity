@@ -1393,9 +1393,17 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 2528643353875841876, guid: 7b8abbb2e6397da4ab0d683b36cbd7cd, type: 3}
+      propertyPath: m_Enabled
+      value: 1
+      objectReference: {fileID: 0}
     - target: {fileID: 3339361588730578547, guid: 7b8abbb2e6397da4ab0d683b36cbd7cd, type: 3}
       propertyPath: m_Name
       value: Player
+      objectReference: {fileID: 0}
+    - target: {fileID: 3835506442503216445, guid: 7b8abbb2e6397da4ab0d683b36cbd7cd, type: 3}
+      propertyPath: m_Enabled
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 7990297300681393150, guid: 7b8abbb2e6397da4ab0d683b36cbd7cd, type: 3}
       propertyPath: cam
@@ -1427,7 +1435,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 7990297300681393150, guid: 7b8abbb2e6397da4ab0d683b36cbd7cd, type: 3}
       propertyPath: invincibilityTimeAfterDamage
-      value: 13
+      value: 3
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects: []

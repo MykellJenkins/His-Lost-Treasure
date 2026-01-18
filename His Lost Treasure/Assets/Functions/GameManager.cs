@@ -14,18 +14,18 @@ public class GameManager : MonoBehaviour
     public GameObject player;
     public Player playerScript;
 
-    public bool isPaused;
-
+    public bool isPaused = false;
+    public bool endOfLevel;
+    
     float timeScaleOG;
-    //int gameGoalCount;
+    
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
         instance = this;
-
         timeScaleOG = Time.timeScale;
-
+        endOfLevel = false;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<Player>();
     }
@@ -38,13 +38,19 @@ public class GameManager : MonoBehaviour
             if(menuActive == null)
             {
                 statePause();
-                menuActive = menuPause;
-                menuActive.SetActive(true);
             }
             else if(menuActive == menuPause)
             {
                 stateUnpause();
             }
+        }
+        else if(GameManager.instance.playerScript.maxLives == 0)
+        {
+            stateLose();
+        }
+        else if(endOfLevel == true)
+        {
+            stateWin();
         }
     }
 
@@ -54,6 +60,8 @@ public class GameManager : MonoBehaviour
         Time.timeScale = 0;
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
+        menuActive = menuPause;
+        menuActive.SetActive(true);
     }
 
     public void stateUnpause()
@@ -64,6 +72,26 @@ public class GameManager : MonoBehaviour
         Cursor.lockState = CursorLockMode.Locked;
         menuActive.SetActive(false);
         menuActive = null;
+    }
+
+    public void stateLose()
+    {
+        isPaused = true;
+        Time.timeScale = 0;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+        menuActive = menuLose;
+        menuActive.SetActive(true);
+    }
+
+    public void stateWin()
+    {
+        isPaused = true;
+        Time.timeScale = 0;
+        Cursor.visible = true;
+        Cursor.lockState = CursorLockMode.None;
+        menuActive = menuWin;
+        menuActive.SetActive(true);
     }
 
     // If we need a goal count

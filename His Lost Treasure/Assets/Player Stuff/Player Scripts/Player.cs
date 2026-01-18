@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public enum PlayerState 
@@ -15,7 +16,7 @@ public class Player : MonoBehaviour, IDamage
     // Components
     private Rigidbody rb; 
     private CapsuleCollider capsule;
-    public Transform cam;
+    private Transform cam;
 
     // State Machine
     public PlayerState currentState = PlayerState.Idle; 
@@ -42,6 +43,7 @@ public class Player : MonoBehaviour, IDamage
     // Sprinting
     public float SprintSpeed = 6f;
     public KeyCode RunKey = KeyCode.LeftShift;
+    bool IsSprinting;
 
     // Jumping
     public float jumpForce = 10f;
@@ -67,7 +69,13 @@ public class Player : MonoBehaviour, IDamage
     public float ceilingCheckDistance = 0.1f; 
     private bool isGrounded; 
     private float playerHeight;
-    private float targetHeight; 
+    private float targetHeight;
+
+    //damage flash
+    public float flashInterval = 0.1f;
+
+    private Renderer[] renderers;
+    private Coroutine flashCoroutine;
 
     // ????????????????????????????????????????????? 
     // UNITY METHODS 
@@ -81,6 +89,7 @@ public class Player : MonoBehaviour, IDamage
         targetHeight = playerHeight;
         if (cam == null) cam = Camera.main.transform;
         damageEffects = GetComponent<PlayerDamageEffects>();
+        renderers = GetComponentsInChildren<Renderer>();
     } 
     
     void Update() 
@@ -155,7 +164,7 @@ public class Player : MonoBehaviour, IDamage
         {
 
             case PlayerState.Idle:
-                if (moveDirection.magnitude > 0.1f)
+                if (moveDirection.magnitude > 0.1f && isGrounded)
                 {
                     // Check if we should start sprinting immediately from idle
                     currentState = PlayerState.Run;
@@ -183,7 +192,7 @@ public class Player : MonoBehaviour, IDamage
             case PlayerState.Sprint:
                 // Transition OUT of Sprint
                 if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
-                if (!Input.GetKey(RunKey)) currentState = PlayerState.Run;
+                if (!Input.GetKey(RunKey) && isGrounded) currentState = PlayerState.Run;
                 if (invincibilityDuration <= 0)
                 {
                     if (isHurt == true) currentState = PlayerState.Damage;
@@ -238,17 +247,20 @@ public class Player : MonoBehaviour, IDamage
             case PlayerState.Damage:
                 damageTimer -= Time.deltaTime;
 
-                if (damageTimer <= 0 && isGrounded)
+                if (damageTimer <= 0)
                 {
                     isHurt = false;
                     currentState = PlayerState.Idle;
-                }
 
-                if (invincibilityDuration <= 0)
-                {
-                    invincibilityDuration = 0;
-                }
+                    // STOP FLASH ON EXIT
+                    if (flashCoroutine != null)
+                    {
+                        StopCoroutine(flashCoroutine);
+                        flashCoroutine = null;
+                    }
 
+                    SetRenderersVisible(true);
+                }
                 break;
 
 
@@ -266,10 +278,12 @@ public class Player : MonoBehaviour, IDamage
             case PlayerState.Idle:
             case PlayerState.Run:
                 Move(moveSpeed); // Pass the speed as a parameter
+                IsSprinting = false;
                 break;
 
             case PlayerState.Sprint:
                 Move(SprintSpeed);
+                IsSprinting = true;
                 break;
 
             case PlayerState.Jump: 
@@ -302,11 +316,22 @@ public class Player : MonoBehaviour, IDamage
 
     }
     void MoveNormally() 
-    { 
-        Vector3 desiredVelocity = moveDirection * moveSpeed; 
-        Vector3 currentVelocity = rb.linearVelocity; 
-        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z); 
-        rb.AddForce(velocityChange, ForceMode.VelocityChange); 
+    {
+
+        if (IsSprinting == true) 
+        {
+            Vector3 desiredVelocity = moveDirection * moveSpeed;
+            Vector3 currentVelocity = rb.linearVelocity;
+            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+            rb.AddForce(velocityChange, ForceMode.VelocityChange);
+        }
+        else
+        {
+            Vector3 desiredVelocity = moveDirection * moveSpeed;
+            Vector3 currentVelocity = rb.linearVelocity;
+            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+            rb.AddForce(velocityChange, ForceMode.VelocityChange);
+        }
 
     } 
 
@@ -318,7 +343,12 @@ public class Player : MonoBehaviour, IDamage
         {
             targetHeight = playerHeight;
         }
-        
+        if (Input.GetKey(RunKey))
+        {
+            currentState = PlayerState.Sprint;
+        }
+
+
     } 
 
     void ApplyJumpPhysics() 
@@ -431,6 +461,11 @@ public class Player : MonoBehaviour, IDamage
             currentState = PlayerState.Damage;
             damageTimer = damageStunDuration;
             invincibilityDuration = invincibilityTimeAfterDamage;
+
+            if (flashCoroutine != null)
+                StopCoroutine(flashCoroutine);
+
+            flashCoroutine = StartCoroutine(FlashRoutine());
         }
 
         if (targetHeight == crouchHeight)
@@ -442,6 +477,30 @@ public class Player : MonoBehaviour, IDamage
         if (damageEffects != null)
         {
             damageEffects.ApplyKnockback(attackerPosition);
+        }
+    }
+
+    IEnumerator FlashRoutine()
+    {
+        bool visible = true;
+
+        while (invincibilityDuration > 0)
+        {
+            visible = !visible;
+            SetRenderersVisible(visible);
+
+            yield return new WaitForSeconds(flashInterval);
+        }
+
+        // Ensure visible at end
+        SetRenderersVisible(true);
+    }
+
+    void SetRenderersVisible(bool visible)
+    {
+        foreach (Renderer r in renderers)
+        {
+            r.enabled = visible;
         }
     }
 }
