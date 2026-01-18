@@ -13,6 +13,7 @@ public class GameManager : MonoBehaviour
 
     public GameObject player;
     public Player playerScript;
+    public RespawnManager rmInstance;
 
     public bool isPaused = false;
     public bool endOfLevel;
@@ -28,6 +29,7 @@ public class GameManager : MonoBehaviour
         endOfLevel = false;
         player = GameObject.FindWithTag("Player");
         playerScript = player.GetComponent<Player>();
+        rmInstance = new RespawnManager();
     }
 
     // Update is called once per frame
@@ -44,11 +46,15 @@ public class GameManager : MonoBehaviour
                 stateUnpause();
             }
         }
-        else if(GameManager.instance.playerScript.maxLives == 0)
+        else if(GameManager.instance.playerScript.maxLives == 2 || GameManager.instance.playerScript.maxLives == 1)
+        {
+            rmInstance.RespawnPlayer(player);
+        }
+        else if (GameManager.instance.playerScript.maxLives == 0)
         {
             stateLose();
         }
-        else if(endOfLevel == true)
+        else if (endOfLevel == true)
         {
             stateWin();
         }
