@@ -14,7 +14,7 @@ public class GameManager : MonoBehaviour
     public GameObject player;
     public Player playerScript;
 
-    public bool isPaused = false;
+    public bool isPaused;
 
     float timeScaleOG;
     //int gameGoalCount;
