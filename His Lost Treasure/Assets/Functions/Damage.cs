@@ -51,7 +51,7 @@ public class Damage : MonoBehaviour
         {
             Destroy(gameObject);
         }
-        if (dmg != null && type == damageType.crushing && crush.GetIsMovingDown() && !player.GetIsMovingUp())
+        if (dmg != null && type == damageType.crushing && crush.GetIsMovingDown() /*&& !player.GetIsMovingUp()*/)
         {
             dmg.TakeDamage(damageAmount, transform.position);
         }
