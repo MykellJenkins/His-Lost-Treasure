@@ -10,6 +10,8 @@ public class EnemyAI : MonoBehaviour, IDamage
     [SerializeField] NavMeshAgent agent;
     [SerializeField] int faceTargetSpeed;
     [SerializeField] int FOV;
+    [SerializeField] int roamDist;
+    [SerializeField] int roamPauseTime;
 
     [Header("---Stats---")]
     [SerializeField] int HP;
@@ -18,9 +20,12 @@ public class EnemyAI : MonoBehaviour, IDamage
     Color ColorOG;
 
     Vector3 playerDir;
+    Vector3 startingPos;
 
     float attackTimer;
+    float roamTimer;
     float angleToPlayer;
+    float stoppingDistOG;
 
     bool playerInRange;
 
@@ -28,24 +33,46 @@ public class EnemyAI : MonoBehaviour, IDamage
     void Start()
     {
         ColorOG = model.material.color;
+        startingPos = transform.position;
+        stoppingDistOG = agent.stoppingDistance;
     }
 
     // Update is called once per frame
     void Update()
     {
         attackTimer += Time.deltaTime;
+        if(agent.remainingDistance < 0.01f)
+            roamTimer += Time.deltaTime;
 
-        if (playerInRange)
+        if(playerInRange && !canSeePlayer())
         {
-            agent.SetDestination(GameManager.instance.player.transform.position);
-            if (agent.remainingDistance <= agent.stoppingDistance)
-            {
-                if (attackTimer >= attackRate)
-                {
-                    attack();
-                }
-            }
+            checkRoam();
         }
+        else if (!playerInRange)
+        {
+            checkRoam();
+        }
+    }
+
+    void checkRoam()
+    {
+        if (agent.remainingDistance < 0.01f && roamTimer >= roamPauseTime)
+        {
+            roam();
+        }
+    }
+
+    void roam()
+    {
+        roamTimer = 0;
+        agent.stoppingDistance = 0;
+
+        Vector3 ranPos = Random.insideUnitSphere * roamDist;
+        ranPos += startingPos;
+
+        NavMeshHit hit;
+        NavMesh.SamplePosition(ranPos, out hit, roamDist, 1);
+        agent.SetDestination(hit.position);
     }
 
     void attack()
@@ -62,35 +89,40 @@ public class EnemyAI : MonoBehaviour, IDamage
 
     }
 
-    // Won't work properly idk
-    //
-    //bool canSeePlayer()
-    //{
-    //    playerDir = GameManager.instance.player.transform.forward - transform.position;
-    //    angleToPlayer = Vector3.Angle(playerDir, transform.forward);
+    bool canSeePlayer()
+    {
+        playerDir = GameManager.instance.player.transform.position - transform.position;
+        angleToPlayer = Vector3.Angle(playerDir, transform.forward);
 
-    //    if (angleToPlayer <= FOV)
-    //    {
-    //        agent.SetDestination(GameManager.instance.player.transform.position);
+        RaycastHit hit;
+        if (Physics.Raycast(transform.position, playerDir, out hit))
+        {
+            if (angleToPlayer <= FOV)
+            {
+                agent.SetDestination(GameManager.instance.player.transform.position);
 
-    //        if (agent.remainingDistance <= agent.stoppingDistance)
-    //        {
-    //            faceTarget();
-    //        }
-    //        if (attackTimer >= attackRate)
-    //        {
-    //            attack();
-    //        }
-    //        return true;
-    //    }
-    //    return false;
-    //}
+                if (agent.remainingDistance <= agent.stoppingDistance)
+                {
+                    faceTarget();
+                }
+                if (attackTimer >= attackRate)
+                {
+                    attack();
+                }
 
-    //void faceTarget() 
-    //{
-    //    Quaternion rot = Quaternion.LookRotation(new Vector3(playerDir.x, transform.position.y, playerDir.z));
-    //    transform.rotation = Quaternion.Lerp(transform.rotation, rot, Time.deltaTime * faceTargetSpeed);
-    //}
+                agent.stoppingDistance = stoppingDistOG;
+                return true;
+            }
+        }
+        agent.stoppingDistance = 0;
+        return false;
+    }
+
+    void faceTarget()
+    {
+        Quaternion rot = Quaternion.LookRotation(new Vector3(playerDir.x, transform.position.y, playerDir.z));
+        transform.rotation = Quaternion.Lerp(transform.rotation, rot, Time.deltaTime * faceTargetSpeed);
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -105,6 +137,7 @@ public class EnemyAI : MonoBehaviour, IDamage
         if (other.CompareTag("Player"))
         {
             playerInRange = false;
+            agent.stoppingDistance = 0;
         }
     }
 
