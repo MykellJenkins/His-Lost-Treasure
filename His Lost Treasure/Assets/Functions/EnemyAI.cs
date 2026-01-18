@@ -8,6 +8,8 @@ public class EnemyAI : MonoBehaviour, IDamage
     [Header("---Components---")]
     [SerializeField] Renderer model;
     [SerializeField] NavMeshAgent agent;
+    [SerializeField] int faceTargetSpeed;
+    [SerializeField] int FOV;
 
     [Header("---Stats---")]
     [SerializeField] int HP;
@@ -15,7 +17,10 @@ public class EnemyAI : MonoBehaviour, IDamage
 
     Color ColorOG;
 
+    Vector3 playerDir;
+
     float attackTimer;
+    float angleToPlayer;
 
     bool playerInRange;
 
@@ -32,11 +37,13 @@ public class EnemyAI : MonoBehaviour, IDamage
 
         if (playerInRange)
         {
-            agent.SetDestination(GameManager.instance.player.transform.position); 
-
-            if(attackTimer >= attackRate)
+            agent.SetDestination(GameManager.instance.player.transform.position);
+            if (agent.remainingDistance <= agent.stoppingDistance)
             {
-                attack();
+                if (attackTimer >= attackRate)
+                {
+                    attack();
+                }
             }
         }
     }
@@ -54,6 +61,36 @@ public class EnemyAI : MonoBehaviour, IDamage
         //Fourth: damage the player hopefully if I set up the sword right   ?
 
     }
+
+    // Won't work properly idk
+    //
+    //bool canSeePlayer()
+    //{
+    //    playerDir = GameManager.instance.player.transform.forward - transform.position;
+    //    angleToPlayer = Vector3.Angle(playerDir, transform.forward);
+
+    //    if (angleToPlayer <= FOV)
+    //    {
+    //        agent.SetDestination(GameManager.instance.player.transform.position);
+
+    //        if (agent.remainingDistance <= agent.stoppingDistance)
+    //        {
+    //            faceTarget();
+    //        }
+    //        if (attackTimer >= attackRate)
+    //        {
+    //            attack();
+    //        }
+    //        return true;
+    //    }
+    //    return false;
+    //}
+
+    //void faceTarget() 
+    //{
+    //    Quaternion rot = Quaternion.LookRotation(new Vector3(playerDir.x, transform.position.y, playerDir.z));
+    //    transform.rotation = Quaternion.Lerp(transform.rotation, rot, Time.deltaTime * faceTargetSpeed);
+    //}
 
     private void OnTriggerEnter(Collider other)
     {
@@ -74,7 +111,7 @@ public class EnemyAI : MonoBehaviour, IDamage
     public void TakeDamage(int damageAmount, Vector3 attackerPosition)
     {
         HP -= damageAmount;
-
+        agent.SetDestination(GameManager.instance.player.transform.position);
         StartCoroutine(flashRed());
 
         if(HP <= 0)
