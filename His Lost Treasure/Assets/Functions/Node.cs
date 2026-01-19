@@ -1,68 +1,58 @@
-using Unity.VectorGraphics;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class Node : MonoBehaviour
 {
-    [SerializeField] bool unlocked;
-    [SerializeField] Node nextNode;
-    [SerializeField] Node prevNode;
-    [SerializeField] Transform nodePos;
-    [SerializeField] string levelName;
-    //for achievments later
-    //bool levelCompleted;
+    [Header("Identity")]
+    [SerializeField] private string nodeId;
+    [SerializeField] private string levelName;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header("Visuals")]
+    [SerializeField] private SpriteRenderer icon;
+    [SerializeField] private Color lockedColor = Color.gray;
+    [SerializeField] private Color unlockedColor = Color.white;
+
+    [Header("Connections")]
+    [SerializeField] private Node nextNode;
+
+    public string NodeId => nodeId;
+
     void Start()
     {
-        
+        Refresh();
     }
 
-    // Update is called once per frame
-    void Update()
+    public void Refresh()
     {
-        if(GameManager.instance.endOfLevel == true)
-        {
-            CompleteLevel();
-        }
+        bool unlocked = NodeMapManager.Instance.IsNodeUnlocked(nodeId);
+        icon.color = unlocked ? unlockedColor : lockedColor;
     }
 
-    void CompleteLevel()
+    void OnMouseDown()
     {
-        //for achievments later
-        //levelCompleted = true;
+        if (!NodeMapManager.Instance.IsNodeUnlocked(nodeId)) return;
+
+        SceneManager.LoadScene(levelName);
+    }
+
+    // Call this when player completes the level
+    public void CompleteLevel()
+    {
         if (nextNode != null)
         {
-            nextNode.Unlock();
+            NodeMapManager.Instance.UnlockNode(nextNode.NodeId);
         }
     }
-    void Unlock()
+
+    public string GetLevelName()
     {
-        unlocked=true;
+        return levelName;
     }
-    public Transform GetPrevNodePos()
-    {
-        return prevNode.transform; 
-    }
-    public Transform GetNextNodePos()
-    {
-        return nextNode.transform;
-    }
-    public Node GetPrevNode() 
-    { 
-        return prevNode; 
-    }
+
     public Node GetNextNode()
     {
         return nextNode;
     }
-    public bool GetUnlocked()
-    {
-        return unlocked;
-    }
-    public string GetNodeLevelName()
-    {
-        return levelName;
-    }
 }
+
 

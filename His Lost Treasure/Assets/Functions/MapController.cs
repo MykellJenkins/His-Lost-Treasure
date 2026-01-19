@@ -1,74 +1,116 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-
 public class MapController : MonoBehaviour
 {
-    [SerializeField] GameObject player;
-    [SerializeField] Node currentNode;
-    [SerializeField] int playerSpeed;
-    string levelName;
-    bool isMoving;
-    bool movingForward;
-    Vector3 target;
-   
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
+    [Header("References")]
+    [SerializeField] private GameObject player;
+    [SerializeField] private Node startNode;
+
+    [Header("Movement Settings")]
+    [SerializeField] private float moveSpeed = 6f;
+    [SerializeField] private float snapDistance = 0.02f;
+
+    private Node currentNode;
+    private Node targetNode;
+    private bool isMoving;
+
     void Start()
     {
+        // Load the last node from progress or default to start
+        currentNode = LoadCurrentNode() ?? startNode;
         player.transform.position = currentNode.transform.position;
-        levelName = currentNode.GetNodeLevelName();
+
+        // Ensure start node is unlocked
+        if (!NodeMapManager.Instance.IsNodeUnlocked(currentNode.NodeId))
+            NodeMapManager.Instance.UnlockNode(currentNode.NodeId);
     }
 
-    // Update is called once per frame
     void Update()
     {
-        if (Input.GetButtonDown("Jump"))
-        {
-            SceneManager.LoadScene(levelName);
-        }
-        if (currentNode.GetNextNode() != null && currentNode.GetNextNode().GetUnlocked())
-        {
-            
-            if (Input.GetButtonDown("Right") && !isMoving)
-            {
-
-                isMoving = true;
-                movingForward = true;
-                target = currentNode.GetNextNodePos().position;
-
-
-
-            }
-        } 
-            if (currentNode.GetPrevNode() != null && currentNode.GetPrevNode().GetUnlocked())
-        {
-            if (Input.GetButtonDown("Left") && !isMoving)
-            {
-
-                isMoving = true;
-                movingForward = false;
-                target = currentNode.GetPrevNodePos().position;
-
-
-
-            }
-        }
         if (isMoving)
         {
-            player.transform.position = Vector3.MoveTowards(player.transform.position, target, playerSpeed * Time.deltaTime);
-            if (Vector3.Distance(player.transform.position, target) < 0.01f)
-            {
-                isMoving = false;
-                if (movingForward)
-                {
-                    currentNode = currentNode.GetNextNode();
-                }else if (!movingForward) 
-                {
-                    currentNode = currentNode.GetPrevNode();
-                }
-                    levelName = currentNode.GetNodeLevelName();
-            }
+            MoveToNode();
+            return;
+        }
+
+        HandleInput();
+    }
+
+    private void HandleInput()
+    {
+        float horizontal = Input.GetAxisRaw("Horizontal");
+
+        if (horizontal > 0.5f)
+            TryMove(currentNode.GetNextNode());
+
+        if (horizontal < -0.5f)
+            TryMove(GetPreviousNode());
+
+        if (Input.GetButtonDown("Jump"))
+            SceneManager.LoadScene(currentNode.GetLevelName());
+    }
+
+    private void TryMove(Node next)
+    {
+        if (next == null) return;
+
+        if (!NodeMapManager.Instance.IsNodeUnlocked(next.NodeId)) return;
+
+        targetNode = next;
+        isMoving = true;
+    }
+
+    private void MoveToNode()
+    {
+        player.transform.position = Vector3.MoveTowards(
+            player.transform.position,
+            targetNode.transform.position,
+            moveSpeed * Time.deltaTime
+        );
+
+        if (Vector3.Distance(player.transform.position, targetNode.transform.position) < snapDistance)
+        {
+            currentNode = targetNode;
+            targetNode = null;
+            isMoving = false;
+            SaveCurrentNode();
         }
     }
-    
+    public Node GetCurrentNode()
+    {
+        return currentNode;
+    }
+
+    private void SaveCurrentNode()
+    {
+        ProgressSaveData data = SavePlayerData.Instance.LoadProgress() ?? new ProgressSaveData();
+        data.currentNodeId = currentNode.NodeId;
+        SavePlayerData.Instance.SaveProgress(data);
+    }
+
+    public Node LoadCurrentNode()
+    {
+        ProgressSaveData data = SavePlayerData.Instance.LoadProgress();
+        if (data == null || string.IsNullOrEmpty(data.currentNodeId)) return null;
+
+        foreach (Node node in FindObjectsByType<Node>(FindObjectsSortMode.None))
+        {
+            if (node.NodeId == data.currentNodeId)
+                return node;
+        }
+
+        return null;
+    }
+
+    private Node GetPreviousNode()
+    {
+        // Find previous node by checking all nodes whose next node is current
+        foreach (Node node in FindObjectsByType<Node>(FindObjectsSortMode.None))
+        {
+            if (node.GetNextNode() == currentNode)
+                return node;
+        }
+        return null;
+    }
 }

@@ -19,6 +19,7 @@ public class GameManager : MonoBehaviour
     public GameObject player;
     public Player playerScript;
     public RespawnManager rmInstance;
+    public Node currentNode;
 
     public bool isPaused = false;
     public bool endOfLevel;
@@ -41,6 +42,9 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+        playerScript = FindFirstObjectByType<Player>();
+        PlayerSaveData data = SavePlayerData.Instance.LoadPlayer();
+        playerScript.LoadFromSave(data);
         instance = this;
         timeScaleOG = Time.timeScale;
         endOfLevel = false;
@@ -49,6 +53,7 @@ public class GameManager : MonoBehaviour
         rmInstance = RespawnManager.Instance;
         AudioListener.volume = PlayerPrefs.GetFloat("Volume", 5f);
         gameplayMusic.Play();
+        
     }
 
     // Update is called once per frame
@@ -175,7 +180,23 @@ public class GameManager : MonoBehaviour
 
         from.Pause();
     }
+    public void SaveGame()
+    {
+        Player player = FindFirstObjectByType<Player>();
+        SavePlayerData.Instance.SavePlayer(player.GetSaveData());
+    }
 
+    public void LevelComplete()
+    {
+        if (currentNode != null)
+        {
+            currentNode.CompleteLevel();      // Unlock next node
+            NodeMapManager.Instance.SaveProgress(); // Save progress
+        }
+
+        // Show win UI
+        stateWin();
+    }
     // If we need a goal count
     //
     //public void updateGameGoal(int amount)

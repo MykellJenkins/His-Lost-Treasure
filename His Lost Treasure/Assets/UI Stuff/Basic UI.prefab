@@ -536,10 +536,15 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
   menuActive: {fileID: 0}
   menuPause: {fileID: 3132974159080717793}
+  menuSetting: {fileID: 5382793970030794893, guid: adb66f7f453828645aa12efbbdcce8df, type: 3}
   menuWin: {fileID: 8139524574896554282}
   menuLose: {fileID: 2215327100303099993}
+  gameplayMusic: {fileID: 0}
+  pauseMenuMusic: {fileID: 1548127586336260285, guid: 0bd0b4300e4400f4b80be28f00ebf725, type: 3}
   player: {fileID: 0}
   playerScript: {fileID: 0}
+  rmInstance: {fileID: 0}
+  currentNode: {fileID: 0}
   isPaused: 0
   endOfLevel: 0
 --- !u!1 &1921100268152611911
@@ -4167,7 +4172,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1490547816004475512}
         m_TargetAssemblyTypeName: ButtonFunctions, Assembly-CSharp
-        m_MethodName: restart
+        m_MethodName: Restart
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
