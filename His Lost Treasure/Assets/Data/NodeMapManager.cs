@@ -3,72 +3,76 @@ using UnityEngine;
 
 public class NodeMapManager : MonoBehaviour
 {
-    public static NodeMapManager Instance;
+    public static NodeMapManager Instance { get; private set; }
 
-    private HashSet<string> unlockedNodes = new();  // Fast lookup of unlocked nodes
+    [SerializeField] private string startNodeId; // assign the first node in inspector
+
+    private HashSet<string> unlockedNodes = new();
+    private Dictionary<string, Node> nodeLookup = new();
 
     void Awake()
     {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
-        DontDestroyOnLoad(gameObject);
 
-        LoadProgress();  // Load saved unlocked nodes on start
+        // Cache nodes
+        Node[] nodes = FindObjectsByType<Node>(FindObjectsSortMode.None);
+        foreach (Node node in nodes)
+        {
+            if (!nodeLookup.ContainsKey(node.NodeId))
+                nodeLookup.Add(node.NodeId, node);
+        }
+
+        LoadProgress();
+
+        // Ensure at least one node is unlocked
+        if (unlockedNodes.Count == 0 && !string.IsNullOrEmpty(startNodeId))
+        {
+            unlockedNodes.Add(startNodeId);
+            SaveProgress();
+        }
+
+        RefreshAllNodes();
     }
 
-    // Check if a node is unlocked
-    public bool IsNodeUnlocked(string nodeId)
-    {
-        return unlockedNodes.Contains(nodeId);
-    }
+    // ---------------- PUBLIC ----------------
+    public bool IsNodeUnlocked(string nodeId) => unlockedNodes.Contains(nodeId);
 
-    // Unlock a node by ID
     public void UnlockNode(string nodeId)
     {
-        if (unlockedNodes.Contains(nodeId)) return;
+        if (!unlockedNodes.Contains(nodeId))
+        {
+            unlockedNodes.Add(nodeId);
+            SaveProgress();
+        }
 
-        unlockedNodes.Add(nodeId);
-        SaveProgress();
-        RefreshAllNodes();  // Update visuals for all nodes
+        RefreshAllNodes(); // update all node visuals
     }
 
-    // Refresh visuals for every node
-    private void RefreshAllNodes()
-    {
-        foreach (Node node in FindObjectsByType<Node>(FindObjectsSortMode.None))
-            node.Refresh();
-    }
-
-    // Save unlocked nodes and current node
+    // ---------------- SAVE / LOAD ----------------
     public void SaveProgress()
     {
-        // Load existing progress or create new
         ProgressSaveData data = SavePlayerData.Instance.LoadProgress() ?? new ProgressSaveData();
         data.unlockedNodes = new List<string>(unlockedNodes);
 
-        // Save current node if MapController exists
-        var mapControllers = FindObjectsByType<MapController>(FindObjectsSortMode.None);
-        if (mapControllers != null && mapControllers.Length > 0)
-        {
-            var currentNode = mapControllers[0].GetCurrentNode();
-            data.currentNodeId = currentNode != null ? currentNode.name : null;
-        }
-           
+        MapController map = FindFirstObjectByType<MapController>();
+        if (map != null && map.GetCurrentNode() != null)
+            data.currentNodeId = map.GetCurrentNode().NodeId;
 
         SavePlayerData.Instance.SaveProgress(data);
     }
 
-    // Load unlocked nodes from save
-    public void LoadProgress()
+    private void LoadProgress()
     {
         ProgressSaveData data = SavePlayerData.Instance.LoadProgress();
         if (data != null && data.unlockedNodes != null)
-        {
             unlockedNodes = new HashSet<string>(data.unlockedNodes);
-        }
+    }
+
+    // ---------------- VISUALS ----------------
+    private void RefreshAllNodes()
+    {
+        foreach (Node node in nodeLookup.Values)
+            node.Refresh();
     }
 }

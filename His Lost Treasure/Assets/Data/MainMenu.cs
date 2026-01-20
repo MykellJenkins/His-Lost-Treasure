@@ -1,152 +1,172 @@
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEngine.SceneManagement;
 using System.Collections.Generic;
+using System.Linq;
 
 public class MainMenu : MonoBehaviour
 {
-    [Header("Volume Settings")]
-    public TMP_Text volumeTextValue;
-    public Slider volumeSlider;
+    [Header("Audio")]
+    [SerializeField] private Slider volumeSlider;
+    [SerializeField] private TMP_Text volumeText;
 
-    [Header("Gameplay Settings")]
-    public TMP_Text mouseSenTextValue;
-    public Slider mouseSenSlider;
-    public Toggle invertYToggle;
+    [Header("Gameplay")]
+    [SerializeField] private Slider sensitivitySlider;
+    [SerializeField] private TMP_Text sensitivityText;
+    [SerializeField] private Toggle invertYToggle;
 
-    [Header("Graphics Settings")]
-    public TMP_Text brightnessTextValue;
-    public Slider brightnessSlider;
-    public TMP_Dropdown qualityDropdown;
-    public Toggle fullscreenToggle;
-    public TMP_Dropdown resolutionDropdown;
+    [Header("Graphics")]
+    [SerializeField] private Slider brightnessSlider;
+    [SerializeField] private TMP_Text brightnessText;
+    [SerializeField] private TMP_Dropdown qualityDropdown;
+    [SerializeField] private Toggle fullscreenToggle;
+    [SerializeField] private TMP_Dropdown resolutionDropdown;
 
-    private int _qualityLevel;
-    private bool _isFullScreen;
-    private float _brightnessLevel;
-    private float mainMouseSen = 4f;
-
-    Resolution[] resolutions;
+    private MenuSaveData data;
+    private Resolution[] resolutions;
+    private bool isInitializing = false; // Prevents saving while loading initial values
 
     void Start()
     {
-        // Setup resolution options
-        resolutions = Screen.resolutions;
+        isInitializing = true;
+        LoadOrCreateData();
+        SetupResolutions();
+        ApplyAllToUI();
+        isInitializing = false;
+    }
+
+    void LoadOrCreateData()
+    {
+        data = SavePlayerData.Instance.LoadMenu();
+        if (data == null) data = new MenuSaveData();
+    }
+
+    void ApplyAllToUI()
+    {
+        // Audio
+        volumeSlider.value = data.masterVolume;
+        volumeText.text = (data.masterVolume * 100).ToString("0") + "%";
+        AudioListener.volume = data.masterVolume;
+
+        // Sensitivity
+        sensitivitySlider.value = data.mouseSensitivity;
+        sensitivityText.text = data.mouseSensitivity.ToString("0.0");
+
+        // Toggles
+        invertYToggle.isOn = data.invertY;
+        fullscreenToggle.isOn = data.isFullscreen;
+
+        // Graphics
+        brightnessSlider.value = data.brightness;
+        brightnessText.text = data.brightness.ToString("0.0");
+
+        qualityDropdown.value = data.qualityLevel;
+        QualitySettings.SetQualityLevel(data.qualityLevel);
+
+        // Resolution
+        resolutionDropdown.value = data.refreshRate;
+        // Apply resolution safely
+        if (resolutions != null && data.refreshRate < resolutions.Length)
+        {
+            SetResolution(data.refreshRate);
+        }
+    }
+
+    // ================= UI CALLBACKS =================
+
+    public void SetVolume(float value)
+    {
+        data.masterVolume = value;
+        AudioListener.volume = value; // In 2026, use an AudioMixer for better results
+        volumeText.text = (value * 100).ToString("0") + "%";
+        AutoSave();
+    }
+
+    public void SetSensitivity(float value)
+    {
+        data.mouseSensitivity = value;
+        sensitivityText.text = value.ToString("0.0");
+        AutoSave();
+    }
+
+    public void SetInvertY(bool value)
+    {
+        data.invertY = value;
+        AutoSave();
+    }
+
+    public void SetBrightness(float value)
+    {
+        data.brightness = value;
+        brightnessText.text = value.ToString("0.0");
+        // Typically handled via a Post-Processing Volume weight or Global Shader param
+        AutoSave();
+    }
+
+    public void SetQuality(int index)
+    {
+        data.qualityLevel = index;
+        QualitySettings.SetQualityLevel(index);
+        AutoSave();
+    }
+
+    public void SetFullscreen(bool value)
+    {
+        data.isFullscreen = value;
+        Screen.fullScreen = value;
+        AutoSave();
+    }
+
+    public void SetResolution(int index)
+    {
+        if (resolutions == null || index < 0 || index >= resolutions.Length) return;
+
+        data.refreshRate = index;
+        Resolution res = resolutions[index];
+        // Use the modern 2026 RefreshRate API if available
+        Screen.SetResolution(res.width, res.height, data.isFullscreen);
+        AutoSave();
+    }
+
+    public void AutoSave()
+    {
+        if (isInitializing) return;
+        SavePlayerData.Instance.SaveMenu(data);
+    }
+
+    // ================= RESOLUTIONS =================
+
+    void SetupResolutions()
+    {
+        // Filter unique resolutions to avoid duplicates with different refresh rates
+        resolutions = Screen.resolutions.Select(res => new Resolution { width = res.width, height = res.height }).Distinct().ToArray();
+
         resolutionDropdown.ClearOptions();
-        List<string> options = new List<string>();
-        int currentResIndex = 0;
+        List<string> options = new();
+        int currentIndex = 0;
+
         for (int i = 0; i < resolutions.Length; i++)
         {
             string option = resolutions[i].width + " x " + resolutions[i].height;
             options.Add(option);
-            if (resolutions[i].width == Screen.width && resolutions[i].height == Screen.height)
-                currentResIndex = i;
+
+            if (resolutions[i].width == Screen.currentResolution.width &&
+                resolutions[i].height == Screen.currentResolution.height)
+            {
+                currentIndex = i;
+            }
         }
+
         resolutionDropdown.AddOptions(options);
-        resolutionDropdown.value = currentResIndex;
 
-        LoadSettings();
+        // If data is new, use current system resolution
+        if (data.refreshRate < 0) data.refreshRate = currentIndex;
     }
 
-    // ===================== Settings Changes =====================
-    public void SetVolume(float vol)
+    public void ResetToDefaults()
     {
-        AudioListener.volume = vol;
-        volumeTextValue.text = vol.ToString("0.0");
-        SaveSettings();
-    }
-
-    public void SetMouseSen(float sen)
-    {
-        mainMouseSen = Mathf.RoundToInt(sen);
-        mouseSenTextValue.text = mainMouseSen.ToString("0");
-        SaveSettings();
-    }
-
-    public void SetInvertY(bool invert)
-    {
-        invertYToggle.isOn = invert;
-        SaveSettings();
-    }
-
-    public void SetBrightness(float brightness)
-    {
-        _brightnessLevel = brightness;
-        brightnessTextValue.text = brightness.ToString("0.0");
-        SaveSettings();
-    }
-
-    public void SetFullScreen(bool isFullscreen)
-    {
-        _isFullScreen = isFullscreen;
-        Screen.fullScreen = isFullscreen;
-        SaveSettings();
-    }
-
-    public void SetQuality(int qualityIndex)
-    {
-        _qualityLevel = qualityIndex;
-        QualitySettings.SetQualityLevel(qualityIndex);
-        SaveSettings();
-    }
-
-    public void SetResolution(int resIndex)
-    {
-        Resolution resolution = resolutions[resIndex];
-        Screen.SetResolution(resolution.width, resolution.height, _isFullScreen);
-        resolutionDropdown.value = resIndex;
-        SaveSettings();
-    }
-
-    // ===================== Save & Load =====================
-    void SaveSettings()
-    {
-        MenuSaveData data = new MenuSaveData
-        {
-            volume = AudioListener.volume,
-            playerMouseSensitivity = mainMouseSen,
-            playerInvertY = invertYToggle.isOn,
-            brightness = _brightnessLevel,
-            quality = _qualityLevel,
-            fullscreen = _isFullScreen,
-            resolutionIndex = resolutionDropdown.value
-        };
-
+        data = new MenuSaveData();
+        ApplyAllToUI();
         SavePlayerData.Instance.SaveMenu(data);
-    }
-
-    void LoadSettings()
-    {
-        MenuSaveData data = SavePlayerData.Instance.LoadMenu();
-
-        // Volume
-        AudioListener.volume = data.volume;
-        volumeSlider.value = data.volume;
-        volumeTextValue.text = data.volume.ToString("0.0");
-
-        // Mouse Sensitivity
-        mainMouseSen = data.playerMouseSensitivity;
-        mouseSenSlider.value = mainMouseSen;
-        mouseSenTextValue.text = mainMouseSen.ToString("0");
-
-        // Invert Y
-        invertYToggle.isOn = data.playerInvertY;
-
-        // Graphics
-        _brightnessLevel = data.brightness;
-        brightnessSlider.value = _brightnessLevel;
-        brightnessTextValue.text = _brightnessLevel.ToString("0.0");
-
-        _qualityLevel = data.quality;
-        qualityDropdown.value = _qualityLevel;
-        QualitySettings.SetQualityLevel(_qualityLevel);
-
-        _isFullScreen = data.fullscreen;
-        fullscreenToggle.isOn = _isFullScreen;
-        Screen.fullScreen = _isFullScreen;
-
-        resolutionDropdown.value = data.resolutionIndex;
-        SetResolution(data.resolutionIndex);
     }
 }

@@ -1,58 +1,53 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
-public class Node : MonoBehaviour
+public class Node : MonoBehaviour, IPointerClickHandler
 {
-    [Header("Identity")]
     [SerializeField] private string nodeId;
     [SerializeField] private string levelName;
+    [SerializeField] private Node nextNode;
 
     [Header("Visuals")]
     [SerializeField] private SpriteRenderer icon;
     [SerializeField] private Color lockedColor = Color.gray;
     [SerializeField] private Color unlockedColor = Color.white;
 
-    [Header("Connections")]
-    [SerializeField] private Node nextNode;
-
     public string NodeId => nodeId;
-
-    void Start()
-    {
-        Refresh();
-    }
 
     public void Refresh()
     {
         bool unlocked = NodeMapManager.Instance.IsNodeUnlocked(nodeId);
-        icon.color = unlocked ? unlockedColor : lockedColor;
+        if (icon != null)
+            icon.color = unlocked ? unlockedColor : lockedColor;
     }
 
-    void OnMouseDown()
+    public void OnPointerClick(PointerEventData eventData)
     {
+        if (EventSystem.current.IsPointerOverGameObject()) return;
         if (!NodeMapManager.Instance.IsNodeUnlocked(nodeId)) return;
+
+        // Set current node in GameManager before loading level
+        GameManager.Instance.currentNode = this;
 
         SceneManager.LoadScene(levelName);
     }
 
-    // Call this when player completes the level
     public void CompleteLevel()
     {
         if (nextNode != null)
         {
-            NodeMapManager.Instance.UnlockNode(nextNode.NodeId);
+            Debug.Log($"Unlocking next node: {nextNode.nodeId}");
+            NodeMapManager.Instance.UnlockNode(nextNode.nodeId);
+        }
+        else
+        {
+            Debug.LogWarning("Next node is null for node: " + nextNode);
         }
     }
 
-    public string GetLevelName()
-    {
-        return levelName;
-    }
-
-    public Node GetNextNode()
-    {
-        return nextNode;
-    }
+    public Node GetNextNode() => nextNode;
+    public string GetLevelName() => levelName;
 }
 
 

@@ -28,7 +28,7 @@ public class Player : MonoBehaviour, IDamage
     // Lives
     public int maxLives = 3;
     public bool isHurt = false;
-    bool isMovingUp;
+    //bool isMovingUp;
 
     // dmage effect
     public float damageStunDuration = 2f;
@@ -94,6 +94,7 @@ public class Player : MonoBehaviour, IDamage
 
     void Start()
     {
+        // 1. Setup components
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
         capsule = GetComponent<CapsuleCollider>();
@@ -102,11 +103,16 @@ public class Player : MonoBehaviour, IDamage
         if (cam == null) cam = Camera.main.transform;
         damageEffects = GetComponent<PlayerDamageEffects>();
         renderers = GetComponentsInChildren<Renderer>();
+
+        // 2. Load Global Settings (Volume/Sensitivity)
         LoadPlayerControls();
 
+        // 3. Load Save State
         PlayerSaveData savedPlayer = SavePlayerData.Instance.LoadPlayer();
         if (savedPlayer != null)
+        {
             LoadFromSave(savedPlayer);
+        }
     }
 
     void Update()
@@ -115,15 +121,15 @@ public class Player : MonoBehaviour, IDamage
         ReadMovementInput();
         HandleStateTransitions();
         SmoothCrouchHeight();
-        if (rb.linearVelocity == transform.up)
-        {
-            isMovingUp = true;
-        }
-        else { isMovingUp = false; }
-        if (invincibilityDuration > 0)
-        {
-            invincibilityDuration -= Time.deltaTime;
-        }
+        //if (rb.linearVelocity == transform.up)
+        //{
+        //    isMovingUp = true;
+        //}
+        //else { isMovingUp = false; }
+        //if (invincibilityDuration > 0)
+        //{
+        //    invincibilityDuration -= Time.deltaTime;
+        //}
     }
 
     void FixedUpdate()
@@ -533,53 +539,58 @@ public class Player : MonoBehaviour, IDamage
         isHurt = false;
         invincibilityDuration = 0;
         damageTimer = 0;
+        jumpLeft = jumps;
 
-        rb.isKinematic = false;
-        rb.linearVelocity = Vector3.zero;
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = false;
+        }
 
-        enabled = true;
+        enabled = true; // ensure Player script is active
     }
 
     public PlayerSaveData GetSaveData()
     {
-        return new PlayerSaveData
-        {
-            maxLives = maxLives,
-            playerPosition = new Vector3
-            (
-            transform.position.x,
-            transform.position.y,
-            transform.position.z
-            )
-        };
+        // Pass 'this' (the player), the current transform, and the build index
+        return new PlayerSaveData(
+            maxLives,
+            transform,
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex
+        );
     }
 
+    // Call this from Start() or GameManager when data is retrieved
     public void LoadFromSave(PlayerSaveData data)
     {
         if (data == null) return;
 
-        maxLives = data.maxLives;
-        transform.position = new Vector3(
-            data.playerPosition[0],
-            data.playerPosition[1],
-            data.playerPosition[2]
-        );
+        this.maxLives = data.maxLives;
 
-        ResetPlayer(); // REQUIRED to fix frozen state bugs
+        // Convert SerializableVector3 back to Unity Vector3
+        // Use .ToVector3() helper from the struct created previously
+        this.transform.position = data.position.ToVector3();
+
+        // Optional: Load rotation if you added it to PlayerSaveData
+        // this.transform.rotation = Quaternion.Euler(data.rotation.ToVector3());
     }
 
     void LoadPlayerControls()
     {
-        MenuSaveData data = SavePlayerData.Instance.LoadMenu();
-        if (data == null) return;
-
-        mouseSensitivity = data.playerMouseSensitivity;
-        invertY = data.playerInvertY;
+        MenuSaveData settings = SavePlayerData.Instance.LoadMenu();
+        if (settings != null)
+        {
+            this.mouseSensitivity = settings.mouseSensitivity;
+            this.invertY = settings.invertY;
+            // Apply sensitivity to your Cinemachine or Camera script here
+        }
     }
 
 
     void OnApplicationQuit()
     {
+        // Using the Singleton to save the current snapshot of player data
         SavePlayerData.Instance.SavePlayer(GetSaveData());
     }
 

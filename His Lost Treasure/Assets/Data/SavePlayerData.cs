@@ -1,64 +1,82 @@
 using System.IO;
+using System.Threading.Tasks;
 using UnityEngine;
 
 public class SavePlayerData : MonoBehaviour
 {
-    public static SavePlayerData Instance;
+    public static SavePlayerData Instance { get; private set; }
 
-    string playerPath;
-    string menuPath;
-    string progressPath;
+    // Use a subfolder to keep persistentDataPath clean
+    private string SaveDirectory => Path.Combine(Application.persistentDataPath, "Saves");
 
     void Awake()
     {
-        if (Instance != null)
-        {
-            Destroy(gameObject);
-            return;
-        }
-
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
         Instance = this;
         DontDestroyOnLoad(gameObject);
 
-        playerPath = Application.persistentDataPath + "/player.json";
-        menuPath = Application.persistentDataPath + "/menu.json";
+        // Ensure the save directory exists immediately
+        if (!Directory.Exists(SaveDirectory)) Directory.CreateDirectory(SaveDirectory);
+
+        // Initialize default files if they don't exist
+        InitializeDefaultSave<MenuSaveData>("menu.json");
+        InitializeDefaultSave<ProgressSaveData>("progress.json");
+        InitializeDefaultSave<PlayerSaveData>("player.json");
     }
 
-    // ---------- PLAYER ----------
-    public void SavePlayer(PlayerSaveData data)
+    // ---------- GENERIC CORE LOGIC ----------
+
+    public async Task SaveDataAsync<T>(T data, string fileName)
     {
-        File.WriteAllText(playerPath, JsonUtility.ToJson(data, true));
+        string path = Path.Combine(SaveDirectory, fileName);
+        try
+        {
+            string json = JsonUtility.ToJson(data, true);
+            await File.WriteAllTextAsync(path, json);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Save failed for {fileName}: {e.Message}");
+        }
     }
 
-    public PlayerSaveData LoadPlayer()
+    public T LoadData<T>(string fileName) where T : new()
     {
-        if (!File.Exists(playerPath)) return null;
-        return JsonUtility.FromJson<PlayerSaveData>(File.ReadAllText(playerPath));
+        string path = Path.Combine(SaveDirectory, fileName);
+        if (!File.Exists(path)) return new T(); // Return a fresh instance if file is missing
+
+        try
+        {
+            string json = File.ReadAllText(path);
+            return JsonUtility.FromJson<T>(json);
+        }
+        catch (System.Exception e)
+        {
+            Debug.LogError($"Load failed for {fileName}: {e.Message}");
+            return new T();
+        }
     }
 
-    // ---------- MENU ----------
-    public void SaveMenu(MenuSaveData data)
+    private void InitializeDefaultSave<T>(string fileName) where T : new()
     {
-        File.WriteAllText(menuPath, JsonUtility.ToJson(data, true));
+        string path = Path.Combine(SaveDirectory, fileName);
+        if (!File.Exists(path))
+        {
+            // Run synchronously during Awake to ensure data is ready for the first frame
+            string json = JsonUtility.ToJson(new T(), true);
+            File.WriteAllText(path, json);
+        }
     }
 
-    public MenuSaveData LoadMenu()
-    {
-        if (!File.Exists(menuPath)) return null;
-        return JsonUtility.FromJson<MenuSaveData>(File.ReadAllText(menuPath));
-    }
+    // ---------- CONVENIENCE WRAPPERS ----------
+    // You can still keep these for easier calling from other scripts
 
-    // ---------- NODE PROGRESS ----------
-    public void SaveProgress(ProgressSaveData data)
-    {
-        File.WriteAllText(progressPath, JsonUtility.ToJson(data, true));
-    }
+    public async void SavePlayer(PlayerSaveData data) => await SaveDataAsync(data, "player.json");
+    public PlayerSaveData LoadPlayer() => LoadData<PlayerSaveData>("player.json");
 
-    public ProgressSaveData LoadProgress()
-    {
-        if (!File.Exists(progressPath)) return null;
-        return JsonUtility.FromJson<ProgressSaveData>(File.ReadAllText(progressPath));
-    }
+    public async void SaveMenu(MenuSaveData data) => await SaveDataAsync(data, "menu.json");
+    public MenuSaveData LoadMenu() => LoadData<MenuSaveData>("menu.json");
 
-
+    public async void SaveProgress(ProgressSaveData data) => await SaveDataAsync(data, "progress.json");
+    public ProgressSaveData LoadProgress() => LoadData<ProgressSaveData>("progress.json");
 }
