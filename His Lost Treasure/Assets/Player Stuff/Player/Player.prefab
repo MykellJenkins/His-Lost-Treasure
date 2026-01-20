@@ -213,7 +213,7 @@ Transform:
   m_GameObject: {fileID: 3339361588730578547}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 505, y: 1.4, z: 487}
+  m_LocalPosition: {x: 8, y: 3.98, z: 0.62}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -232,8 +232,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 8ec22535002ebda4b8a6ef52ad05e804, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Player
+  mouseSensitivity: 4
+  invertY: 0
   currentState: 0
   maxLives: 3
+  isHurt: 0
   damageStunDuration: 2
   damageTimer: 10
   invincibilityTimeAfterDamage: 10

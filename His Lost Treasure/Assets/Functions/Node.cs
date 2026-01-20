@@ -1,64 +1,53 @@
-using Unity.VectorGraphics;
 using UnityEngine;
+using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
-public class Node : MonoBehaviour
+public class Node : MonoBehaviour, IPointerClickHandler
 {
-    [SerializeField] bool unlocked;
-    [SerializeField] Node nextNode;
-    [SerializeField] Node prevNode;
-    [SerializeField] Transform nodePos;
-    [SerializeField] string levelName;
-    //for achievments later
-    //bool levelCompleted;
+    [SerializeField] private string nodeId;
+    [SerializeField] private string levelName;
+    [SerializeField] private Node nextNode;
 
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start()
+    [Header("Visuals")]
+    [SerializeField] private SpriteRenderer icon;
+    [SerializeField] private Color lockedColor = Color.gray;
+    [SerializeField] private Color unlockedColor = Color.white;
+
+    public string NodeId => nodeId;
+
+    public void Refresh()
     {
-        
+        bool unlocked = NodeMapManager.Instance.IsNodeUnlocked(nodeId);
+        if (icon != null)
+            icon.color = unlocked ? unlockedColor : lockedColor;
     }
 
-    // Update is called once per frame
-    void Update()
+    public void OnPointerClick(PointerEventData eventData)
     {
-    
+        if (EventSystem.current.IsPointerOverGameObject()) return;
+        if (!NodeMapManager.Instance.IsNodeUnlocked(nodeId)) return;
+
+        // Set current node in GameManager before loading level
+        GameManager.Instance.currentNode = this;
+
+        SceneManager.LoadScene(levelName);
     }
-    void CompleteLevel()
+
+    public void CompleteLevel()
     {
-        //for achievments later
-        //levelCompleted = true;
         if (nextNode != null)
         {
-            nextNode.Unlock();
+            Debug.Log($"Unlocking next node: {nextNode.nodeId}");
+            NodeMapManager.Instance.UnlockNode(nextNode.nodeId);
+        }
+        else
+        {
+            Debug.LogWarning("Next node is null for node: " + nextNode);
         }
     }
-    void Unlock()
-    {
-        unlocked=true;
-    }
-    public Transform GetPrevNodePos()
-    {
-        return prevNode.transform; 
-    }
-    public Transform GetNextNodePos()
-    {
-        return nextNode.transform;
-    }
-    public Node GetPrevNode() 
-    { 
-        return prevNode; 
-    }
-    public Node GetNextNode()
-    {
-        return nextNode;
-    }
-    public bool GetUnlocked()
-    {
-        return unlocked;
-    }
-    public string GetNodeLevelName()
-    {
-        return levelName;
-    }
+
+    public Node GetNextNode() => nextNode;
+    public string GetLevelName() => levelName;
 }
+
 
