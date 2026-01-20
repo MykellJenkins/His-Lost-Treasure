@@ -8,58 +8,35 @@ public class RespawnManager : MonoBehaviour
 
     private void Awake()
     {
-        if (Instance == null)
-        {
-            Instance = this;
-            
-        }
-        else
-        {
-            Destroy(gameObject);
-        }
+        if (Instance == null) Instance = this;
+        else Destroy(gameObject);
     }
 
+    // Set the checkpoint (e.g., NodeMap node or in-level checkpoint)
     public void SetCheckPoint(Vector3 newCheckPoint)
     {
         currentCheckPoint = newCheckPoint;
     }
 
-    public void RespawnPlayer(GameObject player)
+    // Respawn the player at the current checkpoint
+    public void RespawnPlayer(Player player)
     {
+        if (player == null) return;
+
         CharacterController controller = player.GetComponent<CharacterController>();
-        if (controller != null)
-        {
-            controller.enabled = false; // Disable the CharacterController to avoid collision issues
-            player.transform.position = currentCheckPoint;
-            controller.enabled = true; // Re-enable the CharacterController
-        }
-        else
-        {
-            // If no CharacterController is found, just set the position
-            player.transform.position = currentCheckPoint;
-        }
+        Rigidbody rb = player.GetComponent<Rigidbody>();
+
+        // Disable physics to prevent collision issues
+        if (controller != null) controller.enabled = false;
+        if (rb != null) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+
+        // Move player to checkpoint
+        player.transform.position = currentCheckPoint;
+
+        // Reset player state
+        player.ResetPlayer();
+
+        // Re-enable physics
+        if (controller != null) controller.enabled = true;
     }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 }

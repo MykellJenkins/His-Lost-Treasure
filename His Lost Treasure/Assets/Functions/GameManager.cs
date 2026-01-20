@@ -1,192 +1,238 @@
-using TMPro;
-using Unity.Cinemachine;
-using UnityEngine;
-using UnityEngine.UI;
 using System.Collections;
+using UnityEngine;
+using UnityEngine.SceneManagement;
+
 
 public class GameManager : MonoBehaviour
 {
-    public static GameManager instance;
+    public static GameManager Instance { get; private set; }
 
-    [SerializeField] GameObject menuActive;
+    [Header("Manager References")]
+    public Player playerScript;
+    public Node currentNode;
+    public RespawnManager rmInstance; // Added RespawnManager reference
+
+    [Header("UI Menus")]
     [SerializeField] GameObject menuPause;
     [SerializeField] GameObject menuSetting;
     [SerializeField] GameObject menuWin;
     [SerializeField] GameObject menuLose;
+    private GameObject menuActive;
+
+    [Header("Audio")]
     [SerializeField] AudioSource gameplayMusic;
     [SerializeField] AudioSource pauseMenuMusic;
+    [SerializeField] float audioFadeDuration = 0.5f;
 
-    public GameObject player;
-    public Player playerScript;
-    public RespawnManager rmInstance;
+    public bool isPaused { get; private set; }
+    public bool isGameOver = false;
+    public bool endOfLevel = false;
 
-    public bool isPaused = false;
-    public bool endOfLevel;
-    
-    float timeScaleOG;
+    private bool playerReady = false;
 
-
-    // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Awake()
     {
-        if (instance != null && instance != this)
+        if (Instance != null && Instance != this)
         {
             Destroy(gameObject);
             return;
         }
+        Instance = this;
 
-        instance = this;
-        DontDestroyOnLoad(gameObject);
+        // Assign RespawnManager singleton if not set
+        if (rmInstance == null) rmInstance = RespawnManager.Instance;
     }
 
     void Start()
     {
-        instance = this;
-        timeScaleOG = Time.timeScale;
-        endOfLevel = false;
-        player = GameObject.FindWithTag("Player");
-        playerScript = player.GetComponent<Player>();
-        rmInstance = RespawnManager.Instance;
-        AudioListener.volume = PlayerPrefs.GetFloat("Volume", 5f);
-        gameplayMusic.Play();
+        StartCoroutine(InitializePlayerCoroutine());
+        Time.timeScale = 1f;
+
+        if (gameplayMusic != null) gameplayMusic.Play();
     }
 
-    // Update is called once per frame
+    // ---------------- INITIALIZATION ----------------
+    private IEnumerator InitializePlayerCoroutine()
+    {
+        yield return null; // Wait one frame for all objects to initialize
+
+        // Find player in scene
+        if (playerScript == null)
+            playerScript = FindFirstObjectByType<Player>();
+
+        if (playerScript == null)
+        {
+            Debug.LogError("GameManager: Player not found in scene!");
+            yield break;
+        }
+
+        // Load save data
+        PlayerSaveData loadedPlayerData = SavePlayerData.Instance.LoadPlayer();
+        if (loadedPlayerData != null)
+            playerScript.LoadFromSave(loadedPlayerData);
+        else
+            playerScript.ResetPlayer();
+
+        // Set checkpoint at current NodeMap node
+        if (MapController.Instance != null)
+        {
+            currentNode = MapController.Instance.GetCurrentNode();
+
+            if (rmInstance != null)
+                rmInstance.SetCheckPoint(currentNode.transform.position);
+
+            // Move player to node
+            CharacterController controller = playerScript.GetComponent<CharacterController>();
+            Rigidbody rb = playerScript.GetComponent<Rigidbody>();
+
+            if (controller != null) controller.enabled = false;
+            if (rb != null) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+
+            playerScript.transform.position = currentNode.transform.position;
+
+            if (controller != null) controller.enabled = true;
+        }
+
+        playerReady = true;
+    }
+
+    // ---------------- UPDATE ----------------
     void Update()
     {
-        if (isPaused) return;
+        if (!playerReady) return;
+
+        HandleInput();
+
+        if (isPaused || isGameOver) return;
+
+        if (playerScript != null && rmInstance != null)
+        {
+            // Player dies
+            if (playerScript.maxLives <= 0)
+            {
+                StateLose();
+            }
+            // Player hurt ? respawn
+            else if (playerScript.isHurt)
+            {
+                rmInstance.RespawnPlayer(playerScript);
+                playerScript.isHurt = false;
+            }
+        }
+
+        if (endOfLevel && !isGameOver)
+        {
+            StateWin();
+            endOfLevel = false;
+        }
+    }
+
+    // ---------------- INPUT ----------------
+    private void HandleInput()
+    {
         if (Input.GetKeyDown(KeyCode.P))
         {
-            if(menuActive == null)
-            {
-                statePause();
-            }
-            else if(menuActive == menuPause)
-            {
-                stateUnpause();
-            }
-            else if (menuActive == menuSetting)
-            {
-                stateBackToPause();
-            }
-        }
-        else if((GameManager.instance.playerScript.maxLives == 2 || GameManager.instance.playerScript.maxLives == 1) && GameManager.instance.playerScript.isHurt)
-        {
-            rmInstance.RespawnPlayer(player);
-        }
-        else if (GameManager.instance.playerScript.maxLives == 0)
-        {
-            stateLose();
-        }
-        else if (endOfLevel == true)
-        {
-            stateWin();
+            if (!isPaused) StatePause();
+            else if (menuActive == menuPause) StateUnpause();
+            else if (menuActive == menuSetting) StateBackToPause();
         }
     }
 
-    public void statePause()
+    // ---------------- GAME STATES ----------------
+    public void StatePause()
     {
-        isPaused = true;
-        Time.timeScale = 0;
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-        
-        StartCoroutine(FadeAudio(gameplayMusic, pauseMenuMusic, 0.5f));
-
-        menuActive = menuPause;
-        menuActive.SetActive(true);
+        SetState(true);
+        StartCoroutine(FadeAudio(gameplayMusic, pauseMenuMusic, audioFadeDuration));
+        ShowMenu(menuPause);
     }
 
-    public void stateUnpause()
+    public void StateUnpause()
     {
-        isPaused = false;
-        Time.timeScale = 1f;
-        Cursor.visible = false;
-        Cursor.lockState = CursorLockMode.Locked;
-      
-        StartCoroutine(FadeAudio(gameplayMusic, pauseMenuMusic, 0.5f));
-
-        menuActive.SetActive(false);
-        menuActive = null;
-    }
-    public void stateSettings()
-    {
-        menuActive.SetActive(false);
-        menuActive = menuSetting;
-        menuActive.SetActive(true);
+        SetState(false);
+        StartCoroutine(FadeAudio(pauseMenuMusic, gameplayMusic, audioFadeDuration));
+        ShowMenu(null);
     }
 
-    //  BACK TO PAUSE MENU
-    public void stateBackToPause()
+    public void StateWin()
     {
-        menuActive.SetActive(false);
-        menuActive = menuPause;
-        menuActive.SetActive(true);
-    }
+        if (isGameOver) return;
+        isGameOver = true;
 
-    public void stateLose()
-    {
-        isPaused = true;
-        Time.timeScale = 0;
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
+        SetState(true);
         gameplayMusic.Stop();
         pauseMenuMusic.Stop();
 
-        menuActive = menuLose;
-        menuActive.SetActive(true);
+        // Unlock next node
+        currentNode?.CompleteLevel();
+
+        // Save progress: current node is this one
+        ProgressSaveData data = SavePlayerData.Instance.LoadProgress() ?? new ProgressSaveData();
+        data.currentNodeId = currentNode?.NodeId;
+        SavePlayerData.Instance.SaveProgress(data);
+
+        ShowMenu(menuWin);
     }
 
-    public void stateWin()
+    public void StateLose()
     {
-        isPaused = true;
-        Time.timeScale = 0;
-        Cursor.visible = true;
-        Cursor.lockState = CursorLockMode.None;
-        gameplayMusic.Stop();
-        pauseMenuMusic.Stop();
+        if (isGameOver) return;
+        isGameOver = true;
 
-        menuActive = menuWin;
-        menuActive.SetActive(true);
+        SetState(true);
+        gameplayMusic?.Stop();
+        pauseMenuMusic?.Stop();
+
+        ShowMenu(menuLose);
     }
 
-
-
-    // VOLUME SLIDER
-    public void SetVolume(float volume)
+    // ---------------- HELPERS ----------------
+    private void SetState(bool paused)
     {
-        AudioListener.volume = volume;
-        PlayerPrefs.SetFloat("Volume", volume);
+        isPaused = paused;
+        Time.timeScale = paused ? 0f : 1f;
+        Cursor.visible = paused;
+        Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
     }
 
-    IEnumerator FadeAudio(AudioSource from, AudioSource to, float duration)
+    private void ShowMenu(GameObject menu)
     {
-        float t = 0;
-        to.volume = 0;
-        to.Play();
+        if (menuActive != null) menuActive.SetActive(false);
+        menuActive = menu;
+        if (menuActive != null) menuActive.SetActive(true);
+    }
+
+    public void StateSettings() => ShowMenu(menuSetting);
+    public void StateBackToPause() => ShowMenu(menuPause);
+
+    private IEnumerator FadeAudio(AudioSource from, AudioSource to, float duration)
+    {
+        float t = 0f;
+        if (!to.isPlaying) to.Play();
 
         while (t < duration)
         {
             t += Time.unscaledDeltaTime;
-            from.volume = Mathf.Lerp(1, 0, t / duration);
-            to.volume = Mathf.Lerp(0, 1, t / duration);
+            if (from != null) from.volume = Mathf.Lerp(1, 0, t / duration);
+            if (to != null) to.volume = Mathf.Lerp(0, 1, t / duration);
             yield return null;
         }
-
-        from.Pause();
+        from?.Pause();
     }
-
-    // If we need a goal count
-    //
-    //public void updateGameGoal(int amount)
-    //{
-    //    gameGoalCount += amount;
-    //    if(gameGoalCount <= 0)
-    //    {
-    //        //you win
-    //        statePause();
-    //        menuActive = menuWin;
-    //        menuActive.SetActive(true);
-    //    }
-    //}
 }
+
+
+
+// If we need a goal count
+//
+//public void updateGameGoal(int amount)
+//{
+//    gameGoalCount += amount;
+//    if(gameGoalCount <= 0)
+//    {
+//        //you win
+//        statePause();
+//        menuActive = menuWin;
+//        menuActive.SetActive(true);
+//    }
+//}
+
