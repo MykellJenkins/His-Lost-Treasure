@@ -29,10 +29,16 @@ public class MainMenu : MonoBehaviour
     void Start()
     {
         isInitializing = true;
-        LoadOrCreateData();
-        SetupResolutions();
-        ApplyAllToUI();
-        isInitializing = false;
+        try
+        {
+            LoadOrCreateData();
+            SetupResolutions();
+            ApplyAllToUI();
+        }
+        finally
+        {
+            isInitializing = false; // Guaranteed to run even if an error occurs above
+        }
     }
 
     void LoadOrCreateData()
@@ -138,34 +144,44 @@ public class MainMenu : MonoBehaviour
 
     void SetupResolutions()
     {
-        // Filter unique resolutions to avoid duplicates with different refresh rates
-        resolutions = Screen.resolutions.Select(res => new Resolution { width = res.width, height = res.height }).Distinct().ToArray();
+        // Fix: Filter by string representation to ensure actual distinct resolutions
+        var uniqueRes = Screen.resolutions
+            .Select(res => new { res.width, res.height })
+            .Distinct()
+            .ToList();
 
+        resolutions = new Resolution[uniqueRes.Count];
         resolutionDropdown.ClearOptions();
         List<string> options = new();
-        int currentIndex = 0;
 
-        for (int i = 0; i < resolutions.Length; i++)
+        for (int i = 0; i < uniqueRes.Count; i++)
         {
-            string option = resolutions[i].width + " x " + resolutions[i].height;
-            options.Add(option);
-
-            if (resolutions[i].width == Screen.currentResolution.width &&
-                resolutions[i].height == Screen.currentResolution.height)
+            resolutions[i] = new Resolution
             {
-                currentIndex = i;
-            }
+                width = uniqueRes[i].width,
+                height = uniqueRes[i].height
+            };
+            options.Add($"{resolutions[i].width} x {resolutions[i].height}");
         }
-
         resolutionDropdown.AddOptions(options);
-
-        // If data is new, use current system resolution
-        if (data.refreshRate < 0) data.refreshRate = currentIndex;
     }
 
     public void Apply()
     {
+        // Ensure data is valid before saving
+        if (data == null) LoadOrCreateData();
+
+        // 2026 Standard: Explicitly set FullScreenMode
+        FullScreenMode mode = data.isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed;
+
+        if (resolutions != null && data.refreshRate < resolutions.Length)
+        {
+            Resolution res = resolutions[data.refreshRate];
+            Screen.SetResolution(res.width, res.height, mode);
+        }
+
         SavePlayerData.Instance.SaveMenu(data);
+        Debug.Log("Settings Applied and Saved Successfully.");
     }
 
     public void ResetToDefaults()

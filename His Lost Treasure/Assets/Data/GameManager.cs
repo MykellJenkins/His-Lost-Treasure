@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
 
     [Header("Manager References")]
     public Player playerScript;
+    public PlayerSaveSystem playersave;
     public Node currentNode;
     public RespawnManager rmInstance; // Added RespawnManager reference
 
@@ -157,7 +158,7 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
         isGameOver = true;
-
+        playersave.SavePlayerProgress();
         SetState(true);
         gameplayMusic.Stop();
         pauseMenuMusic.Stop();
@@ -177,7 +178,7 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
         isGameOver = true;
-
+        playersave.SavePlayerProgress();
         SetState(true);
         gameplayMusic?.Stop();
         pauseMenuMusic?.Stop();
@@ -189,6 +190,8 @@ public class GameManager : MonoBehaviour
     private void SetState(bool paused)
     {
         isPaused = paused;
+        if (paused)
+            playersave.SavePlayerProgress();
         Time.timeScale = paused ? 0f : 1f;
         Cursor.visible = paused;
         Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
