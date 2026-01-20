@@ -11,7 +11,7 @@ public class EndGamePortal : MonoBehaviour
         if (other.gameObject.CompareTag("Player"))
         {
             Debug.Log("Player has reached the end game portal.");
-            GameManager.instance.endOfLevel = true;
+            GameManager.Instance.endOfLevel = true;
         }
 
     }

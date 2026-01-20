@@ -20,7 +20,7 @@ public class DoubleJumpPickup : MonoBehaviour
             return;
         if (other.CompareTag("Player"))
         {
-            GameManager.instance.playerScript.jumps += jumpIncrease;
+            GameManager.Instance.playerScript.jumps += jumpIncrease;
             Destroy(gameObject);
         }
     }
