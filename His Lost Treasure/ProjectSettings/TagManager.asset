@@ -9,18 +9,18 @@ TagManager:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - BadGuys
+  - Decore
+  - Moving platforms
+  - Walls
+  - Damaging Object
+  - Win
+  - Chckpoints
+  - Pushable
+  - Platfform
   - 
   - 
   - 
