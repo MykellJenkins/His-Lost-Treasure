@@ -163,6 +163,11 @@ public class MainMenu : MonoBehaviour
         if (data.refreshRate < 0) data.refreshRate = currentIndex;
     }
 
+    public void Apply()
+    {
+        SavePlayerData.Instance.SaveMenu(data);
+    }
+
     public void ResetToDefaults()
     {
         data = new MenuSaveData();
