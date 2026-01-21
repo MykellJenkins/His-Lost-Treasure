@@ -35,7 +35,6 @@ public class GameManager : MonoBehaviour
     {
         if (Instance != null && Instance != this)
         {
-            Destroy(gameObject);
             return;
         }
         Instance = this;
@@ -158,7 +157,7 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
         isGameOver = true;
-        playersave.SavePlayerProgress();
+        
         SetState(true);
         gameplayMusic.Stop();
         pauseMenuMusic.Stop();
@@ -170,7 +169,7 @@ public class GameManager : MonoBehaviour
         ProgressSaveData data = SavePlayerData.Instance.LoadProgress() ?? new ProgressSaveData();
         data.currentNodeId = currentNode?.NodeId;
         SavePlayerData.Instance.SaveProgress(data);
-
+        //playersave.SavePlayerProgress();
         ShowMenu(menuWin);
     }
 
@@ -190,8 +189,8 @@ public class GameManager : MonoBehaviour
     private void SetState(bool paused)
     {
         isPaused = paused;
-        if (paused)
-            playersave.SavePlayerProgress();
+        //if (paused)
+        //    playersave.SavePlayerProgress();
         Time.timeScale = paused ? 0f : 1f;
         Cursor.visible = paused;
         Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;

@@ -5,7 +5,7 @@ using System;
 public class MenuSaveData
 {
     [Header("Audio")]
-    [Range(0.0001f, 1f)] public float masterVolume = 0.75f;
+    [Range(0.0001f, 1f)] public float masterVolume = 1f;
     [Range(0.0001f, 1f)] public float musicVolume = 1f;
     [Range(0.0001f, 1f)] public float sfxVolume = 1f;
 
@@ -22,6 +22,7 @@ public class MenuSaveData
     public int resWidth = 1920;
     public int resHeight = 1080;
     public int refreshRate = 60;
+    public int resolutionIndex;
 
     /// <summary>
     /// Converts 0-1 volume to Decibels for Unity AudioMixer

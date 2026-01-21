@@ -32,6 +32,7 @@ public class PlayerSaveSystem : MonoBehaviour
 
     public void SavePlayerProgress()
     {
+        if (!IsPlayableLevel(SceneManager.GetActiveScene().buildIndex)) return;
         if (player == null) return;
 
         PlayerSaveData data = new PlayerSaveData(
@@ -48,12 +49,21 @@ public class PlayerSaveSystem : MonoBehaviour
         PlayerSaveData data = SavePlayerData.Instance.LoadPlayer();
         if (data == null) return;
 
-        if (data.currentLevel != SceneManager.GetActiveScene().buildIndex)
+        int currentBuildIndex = SceneManager.GetActiveScene().buildIndex;
+
+        // Only load the scene if we are NOT currently in it.
+        // IMPORTANT: Ensure your Main Menu or Launcher is the one calling this, 
+        // not a script that exists inside the level itself.
+        if (data.currentLevel != currentBuildIndex)
         {
+            // If this script is on a GameObject that persists (DontDestroyOnLoad), 
+            // this is okay. If not, this script is destroyed mid-execution.
             await SceneManager.LoadSceneAsync(data.currentLevel);
-            await FindPlayerAsync();
+            return;
         }
 
+        // If we are already in the right scene, just apply the stats
+        await FindPlayerAsync();
         ApplyPlayerData(data);
     }
 
@@ -65,6 +75,13 @@ public class PlayerSaveSystem : MonoBehaviour
 
     void OnApplicationQuit()
     {
-        SavePlayerProgress(); // synchronous = safe
+        if (SceneManager.GetActiveScene().name != "NodeMap")
+            SavePlayerProgress();
+    }
+
+    bool IsPlayableLevel(int buildIndex)
+    {
+        string name = SceneManager.GetSceneByBuildIndex(buildIndex).name;
+        return name != "NodeMap"; // Add other hubs if needed
     }
 }

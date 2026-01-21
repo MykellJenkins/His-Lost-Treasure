@@ -1,8 +1,9 @@
-using UnityEngine;
-using UnityEngine.UI;
-using TMPro;
 using System.Collections.Generic;
 using System.Linq;
+using TMPro;
+using UnityEngine;
+using UnityEngine.UI;
+using static UnityEngine.Rendering.DebugUI;
 
 public class MainMenu : MonoBehaviour
 {
@@ -22,9 +23,11 @@ public class MainMenu : MonoBehaviour
     [SerializeField] private Toggle fullscreenToggle;
     [SerializeField] private TMP_Dropdown resolutionDropdown;
 
+    float nextSaveTime;
     private MenuSaveData data;
     private Resolution[] resolutions;
     private bool isInitializing = false; // Prevents saving while loading initial values
+    public int resolutionIndex;
 
     void Start()
     {
@@ -50,31 +53,30 @@ public class MainMenu : MonoBehaviour
     void ApplyAllToUI()
     {
         // Audio
-        volumeSlider.value = data.masterVolume;
-        volumeText.text = (data.masterVolume * 100).ToString("0") + "%";
+        volumeSlider.SetValueWithoutNotify(data.masterVolume);
+        volumeText.text = Mathf.RoundToInt(data.masterVolume * 100f) + "%";
         AudioListener.volume = data.masterVolume;
 
         // Sensitivity
-        sensitivitySlider.value = data.mouseSensitivity;
+        sensitivitySlider.SetValueWithoutNotify(data.mouseSensitivity);
         sensitivityText.text = data.mouseSensitivity.ToString("0.0");
 
         // Toggles
-        invertYToggle.isOn = data.invertY;
-        fullscreenToggle.isOn = data.isFullscreen;
+        invertYToggle.SetIsOnWithoutNotify(data.invertY);
+        fullscreenToggle.SetIsOnWithoutNotify(data.isFullscreen);
 
         // Graphics
-        brightnessSlider.value = data.brightness;
+        brightnessSlider.SetValueWithoutNotify(data.brightness);
         brightnessText.text = data.brightness.ToString("0.0");
 
-        qualityDropdown.value = data.qualityLevel;
+        qualityDropdown.SetValueWithoutNotify(data.qualityLevel);
         QualitySettings.SetQualityLevel(data.qualityLevel);
 
         // Resolution
-        resolutionDropdown.value = data.refreshRate;
-        // Apply resolution safely
-        if (resolutions != null && data.refreshRate < resolutions.Length)
+        if (resolutions != null && data.resolutionIndex < resolutions.Length)
         {
-            SetResolution(data.refreshRate);
+            resolutionDropdown.SetValueWithoutNotify(data.resolutionIndex);
+            SetResolution(data.resolutionIndex);
         }
     }
 
@@ -82,16 +84,24 @@ public class MainMenu : MonoBehaviour
 
     public void SetVolume(float value)
     {
+        if (isInitializing) return;
+
+        value = Mathf.Clamp01(value);
         data.masterVolume = value;
-        AudioListener.volume = value; // In 2026, use an AudioMixer for better results
-        volumeText.text = (value * 100).ToString("0") + "%";
+        AudioListener.volume = value;
+
+        volumeText.text = Mathf.RoundToInt(value * 100f) + "%";
         AutoSave();
     }
 
     public void SetSensitivity(float value)
     {
+        if (isInitializing) return;
+
+        value = Mathf.Clamp01(value);
         data.mouseSensitivity = value;
-        sensitivityText.text = value.ToString("0.0");
+
+        sensitivityText.text = Mathf.RoundToInt(value * 100f) + "%";
         AutoSave();
     }
 
@@ -103,6 +113,13 @@ public class MainMenu : MonoBehaviour
 
     public void SetBrightness(float value)
     {
+        if (isInitializing) return;
+
+        value = Mathf.Clamp01(value);
+        data.brightness = value;
+
+        brightnessText.text = Mathf.RoundToInt(value * 100f) + "%";
+
         data.brightness = value;
         brightnessText.text = value.ToString("0.0");
         // Typically handled via a Post-Processing Volume weight or Global Shader param
@@ -111,6 +128,8 @@ public class MainMenu : MonoBehaviour
 
     public void SetQuality(int index)
     {
+        if (isInitializing) return;
+
         data.qualityLevel = index;
         QualitySettings.SetQualityLevel(index);
         AutoSave();
@@ -125,18 +144,27 @@ public class MainMenu : MonoBehaviour
 
     public void SetResolution(int index)
     {
+        if (isInitializing) return;
         if (resolutions == null || index < 0 || index >= resolutions.Length) return;
 
-        data.refreshRate = index;
+        data.resolutionIndex = index;
         Resolution res = resolutions[index];
-        // Use the modern 2026 RefreshRate API if available
-        Screen.SetResolution(res.width, res.height, data.isFullscreen);
+
+        Screen.SetResolution(
+            res.width,
+            res.height,
+            data.isFullscreen ? FullScreenMode.FullScreenWindow : FullScreenMode.Windowed
+        );
+
         AutoSave();
     }
 
     public void AutoSave()
     {
         if (isInitializing) return;
+        if (Time.unscaledTime < nextSaveTime) return;
+
+        nextSaveTime = Time.unscaledTime + 0.4f;
         SavePlayerData.Instance.SaveMenu(data);
     }
 
@@ -144,14 +172,14 @@ public class MainMenu : MonoBehaviour
 
     void SetupResolutions()
     {
-        // Fix: Filter by string representation to ensure actual distinct resolutions
         var uniqueRes = Screen.resolutions
-            .Select(res => new { res.width, res.height })
+            .Select(r => (r.width, r.height))
             .Distinct()
             .ToList();
 
         resolutions = new Resolution[uniqueRes.Count];
         resolutionDropdown.ClearOptions();
+
         List<string> options = new();
 
         for (int i = 0; i < uniqueRes.Count; i++)
@@ -161,10 +189,22 @@ public class MainMenu : MonoBehaviour
                 width = uniqueRes[i].width,
                 height = uniqueRes[i].height
             };
+
             options.Add($"{resolutions[i].width} x {resolutions[i].height}");
+
+            // Auto-detect current resolution
+            if (resolutions[i].width == Screen.width &&
+                resolutions[i].height == Screen.height)
+            {
+                data.resolutionIndex = i;
+            }
         }
+
         resolutionDropdown.AddOptions(options);
     }
+
+
+
 
     public void Apply()
     {
