@@ -41,12 +41,12 @@ public class DebugMenuController : MonoBehaviour
 
         RESPAWN_PLAYER = new DebugCommand("respawn_player", "Respawns the player at the last checkpoint.", "respawn_player", () =>
         {
-            GameManager.instance.rmInstance.RespawnPlayer(GameManager.instance.player);
+            GameManager.Instance.rmInstance.RespawnPlayer(GameManager.Instance.playerScript);
         });
 
         GIVE_LIFE = new DebugCommand("give_life", "Gives full lives to the player.", "give_life", () =>
         {
-            GameManager.instance.playerScript.maxLives = 3;
+            GameManager.Instance.playerScript.maxLives = 3;
         });
 
         SET_MONEY = new DebugCommand<int>("set_money", "Gives a specfiied amount of money.", "set_money <moneyAmount>", (x) =>
@@ -74,13 +74,13 @@ public class DebugMenuController : MonoBehaviour
     {
         showConsole = !showConsole;
 
-        if (!GameManager.instance.isPaused)
+        if (!GameManager.Instance.isPaused)
         {
-            GameManager.instance.statePause();
+            GameManager.Instance.StatePause();
         }
         else
         {
-            GameManager.instance.stateUnpause();
+            GameManager.Instance.StateUnpause();
         }
     }
 

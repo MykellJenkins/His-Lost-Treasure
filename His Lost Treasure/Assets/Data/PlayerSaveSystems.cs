@@ -1,93 +1,87 @@
 using UnityEngine;
 using UnityEngine.SceneManagement;
-using System.Threading.Tasks; // Required for Task.Yield
+using System.Threading.Tasks;
 
 public class PlayerSaveSystem : MonoBehaviour
 {
     private Player player;
 
-    void Start()
+    async void Start()
     {
-        // FIX LINE 10: Find the player by its tag instead of GetComponent on this object
-        GameObject playerGO = GameObject.FindWithTag("Player");
-
-        if (playerGO == null)
+        if (SceneManager.GetActiveScene().name == "NodeMap")
         {
-            // Line 16: Log the error and disable the system gracefully
-            Debug.LogError("Player GameObject not found in scene! Cannot initialize save system.");
-            enabled = false; // Disable this script
+            enabled = false;
             return;
         }
 
-        player = playerGO.GetComponent<Player>();
-
-        if (SceneManager.GetActiveScene().name == "NodeMap") { enabled = false; return; }
-
+        await FindPlayerAsync();
         LoadPlayerProgress();
     }
 
-
-    public async void SavePlayerProgress()
+    async Task FindPlayerAsync()
     {
-        // FIX: Check for null reference before accessing 'player'
-        if (player == null)
+        while (player == null)
         {
-            // Line 38 error message is generated here, preventing a crash
-            Debug.LogError("Cannot save player progress: Player reference is null in SavePlayerSystem.");
-            return; // Exit the method early
+            GameObject playerGO = GameObject.FindWithTag("Player");
+            if (playerGO != null)
+                player = playerGO.GetComponent<Player>();
+
+            await Task.Yield();
         }
+    }
 
-        int currentLevelIndex = SceneManager.GetActiveScene().buildIndex;
+    public void SavePlayerProgress()
+    {
+        if (!IsPlayableLevel(SceneManager.GetActiveScene().buildIndex)) return;
+        if (player == null) return;
 
-        // This line is now safe to run:
-        PlayerSaveData pdata = new PlayerSaveData(player.maxLives, player.transform, currentLevelIndex);
+        PlayerSaveData data = new PlayerSaveData(
+            player.maxLives,
+            player.transform,
+            SceneManager.GetActiveScene().buildIndex
+        );
 
-        await SavePlayerData.Instance.SaveDataAsync(pdata, "player.json");
+        SavePlayerData.Instance.SavePlayer(data);
     }
 
     public async void LoadPlayerProgress()
     {
-        // 1. Retrieve the data
-        PlayerSaveData pdata = SavePlayerData.Instance.LoadPlayer();
-        if (pdata == null) return;
+        PlayerSaveData data = SavePlayerData.Instance.LoadPlayer();
+        if (data == null) return;
 
-        // 2. Check if we need to switch scenes
-        if (pdata.currentLevel != SceneManager.GetActiveScene().buildIndex)
+        int currentBuildIndex = SceneManager.GetActiveScene().buildIndex;
+
+        // Only load the scene if we are NOT currently in it.
+        // IMPORTANT: Ensure your Main Menu or Launcher is the one calling this, 
+        // not a script that exists inside the level itself.
+        if (data.currentLevel != currentBuildIndex)
         {
-            AsyncOperation loadOp = SceneManager.LoadSceneAsync(pdata.currentLevel);
-
-            // Wait until the scene is fully loaded
-            while (!loadOp.isDone)
-            {
-                await Task.Yield();
-            }
-
-            // 3. FIX: Re-find the player in the new scene (since the original was destroyed)
-            GameObject playerGO = GameObject.FindWithTag("Player");
-            if (playerGO != null)
-            {
-                player = playerGO.GetComponent<Player>();
-            }
+            // If this script is on a GameObject that persists (DontDestroyOnLoad), 
+            // this is okay. If not, this script is destroyed mid-execution.
+            await SceneManager.LoadSceneAsync(data.currentLevel);
+            return;
         }
 
-        // 4. Apply the data
-        if (player != null) ApplyPlayerData(pdata);
+        // If we are already in the right scene, just apply the stats
+        await FindPlayerAsync();
+        ApplyPlayerData(data);
     }
 
-    private void ApplyPlayerData(PlayerSaveData data)
+    void ApplyPlayerData(PlayerSaveData data)
     {
         player.maxLives = data.maxLives;
-
-        // Direct conversion using the helper method
-        if (data.position.x != 0 || data.position.y != 0 || data.position.z != 0)
-        {
-            player.transform.position = data.position.ToVector3();
-        }
+        player.transform.position = data.position.ToVector3();
     }
 
     void OnApplicationQuit()
     {
-        // Final save on exit
-        SavePlayerProgress();
+        if (SceneManager.GetActiveScene().name != "NodeMap")
+            SavePlayerProgress();
+    }
+
+    bool IsPlayableLevel(int buildIndex)
+    {
+        string name = SceneManager.GetSceneByBuildIndex(buildIndex).name;
+        return name != "NodeMap"; // Add other hubs if needed
     }
 }
