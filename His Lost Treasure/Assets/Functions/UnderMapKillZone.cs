@@ -4,17 +4,17 @@ public class UnderMapKillZone : MonoBehaviour
 {
     public int damageAmount = 100;
 
-    private void OnTriggerEnter(Collider other)
+    private void OnTriggerEnter(Collider playerScript)
     {
-        if (other.CompareTag("Player"))
+        if (playerScript.CompareTag("Player"))
         {
-           Player HP = other.GetComponent<Player>();
+           Player HP = playerScript.GetComponent<Player>();
             if (HP != null)
             {
                 HP.TakeDamage(damageAmount, transform.position);
             }
 
-            RespawnManager.Instance.RespawnPlayer(other.gameObject);
+            RespawnManager.Instance.RespawnPlayer(playerScript.gameObject.GetComponent<Player>());
         }
     }
 }
