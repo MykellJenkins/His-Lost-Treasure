@@ -26,4 +26,22 @@ public class GameInventory : MonoBehaviour
         reserveItem = item;
         GameInventoryUI.Instance.UpdateReserve(item);
     }
+    void Update()
+    {
+        if (reserveItem != null && Input.GetKeyDown(KeyCode.E))
+        {
+            UseReserveItem();
+        }
+    }
+
+    public void UseReserveItem()
+    {
+        Debug.Log("Using item: " + reserveItem.itemName);
+
+        // TODO: Add actual item effect here
+
+        reserveItem = null;
+        GameInventoryUI.Instance.UpdateReserve(null);
+    }
+
 }
