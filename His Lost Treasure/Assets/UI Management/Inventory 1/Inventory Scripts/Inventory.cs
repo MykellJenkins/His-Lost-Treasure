@@ -43,4 +43,33 @@ public class Inventory : MonoBehaviour
 
     }
 
+    private void OnTriggerEnter(Collider other)
+    {
+        if (other.gameObject.CompareTag("Item"))
+        {
+            GameObject itemPickedUp = other.gameObject;
+            Item item = itemPickedUp.GetComponent<Item>();
+
+            AddItem(itemPickedUp, item.ID, item.type, item.description, item.icon);
+        }
+    }
+
+    void AddItem(GameObject itemObject, int itemID, string itemType, string itemDescription, Texture2D itemIcon)
+    {
+        for (int i = 0; i < allSlots; i++)
+        {
+            if (slot[i].GetComponent<Slot>().empty)
+            {
+                itemObject.GetComponent<Item>().pickedUp = true;
+
+                slot[i].GetComponent<Slot>().Icon = itemIcon;
+                slot[i].GetComponent<Slot>().type = itemType;
+                slot[i].GetComponent<Slot>().ID = itemID;
+                slot[i].GetComponent<Slot>().description = itemDescription;
+
+                break;
+            }
+        }
+    }
+
 }
