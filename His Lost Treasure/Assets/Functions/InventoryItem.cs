@@ -1,22 +1,10 @@
 using UnityEngine;
 
-
-public enum ItemType
+[CreateAssetMenu(menuName = "Inventory/Item")]
+public class InventoryItem : ScriptableObject
 {
-    Consumable,
-    Equipment,
-    Quest,
-    Miscellaneous
-}
-
-
-
-
-
-[System.Serializable]
-public class InventoryItem 
-{
-  public string itemName;
+    public string itemID;
+    public string itemName;
     public Sprite icon;
-    public ItemType itemType;
+    public bool stackable = true;
 }
