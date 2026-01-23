@@ -1,4 +1,5 @@
 using UnityEngine;
+using Unity.Cinemachine;
 
 public class GrappleHook : MonoBehaviour
 {
@@ -7,12 +8,17 @@ public class GrappleHook : MonoBehaviour
     [SerializeField] Rigidbody rb;
 
     [SerializeField] int maxGrappleDistance; 
-    [SerializeField] int grappleSpeed; 
-   
+    [SerializeField] int grappleSpeed;
+    [SerializeField] CinemachineCamera freeLookCam;
+    [SerializeField] CinemachineCamera grappleCam;
+
     Vector3 grapplePos; 
     bool isGrappling; 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
-    void Start() { }
+    void Start() {
+        freeLookCam.Priority = 10;
+        grappleCam.Priority = 0;
+    }
     // Update is called once per frame
     private void Update()
     {
@@ -24,18 +30,32 @@ public class GrappleHook : MonoBehaviour
         HandelGrappling();
     } 
     void HandleGrapple() 
-    { 
-        if (Input.GetKeyDown(KeyCode.F)) 
-        { 
+    {
+        if (Input.GetKeyDown(KeyCode.F))
+        {
+            freeLookCam.Priority = 0;
+            grappleCam.Priority = 20;
+            freeLookCam.gameObject.SetActive(false);
+            grappleCam.gameObject.SetActive(true);
             RaycastHit hit;
             if (Physics.Raycast(GameManager.Instance.playerScript.transform.position, Camera.main.transform.forward,
-                out hit, maxGrappleDistance, ~ignoreLayer) && hit.collider.CompareTag("GrapplePoint")) 
+                out hit, maxGrappleDistance, ~ignoreLayer) && hit.collider.CompareTag("GrapplePoint"))
             {
                 Debug.Log("Hit: " + hit.collider.name);
                 grapplePos = hit.point;
                 isGrappling = true;
             }
         } 
+
+        if (Input.GetKeyUp(KeyCode.F))
+        {
+            freeLookCam.Priority = 20;
+            grappleCam.Priority = 0;
+            freeLookCam.gameObject.SetActive(true);
+            grappleCam.gameObject.SetActive(false);
+            
+            isGrappling = false;
+        }
     }
     void HandelGrappling()
     {
