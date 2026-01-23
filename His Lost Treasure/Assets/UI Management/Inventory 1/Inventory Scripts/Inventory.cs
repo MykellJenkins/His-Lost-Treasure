@@ -21,6 +21,9 @@ public class Inventory : MonoBehaviour
         for (int i = 0; i < allSlots; i++)
         {
             slot[i] = slotHolder.transform.GetChild(i).gameObject;
+
+            if (slot[i].GetComponent<Slot>().item == null)
+                 slot[i].GetComponent<Slot>().empty = true;
         }
     }
 
@@ -54,7 +57,7 @@ public class Inventory : MonoBehaviour
         }
     }
 
-    void AddItem(GameObject itemObject, int itemID, string itemType, string itemDescription, Texture2D itemIcon)
+    void AddItem(GameObject itemObject, int itemID, string itemType, string itemDescription, Sprite itemIcon)
     {
         for (int i = 0; i < allSlots; i++)
         {
@@ -62,13 +65,21 @@ public class Inventory : MonoBehaviour
             {
                 itemObject.GetComponent<Item>().pickedUp = true;
 
+                slot[i].GetComponent<Slot>().item = itemObject;
                 slot[i].GetComponent<Slot>().Icon = itemIcon;
                 slot[i].GetComponent<Slot>().type = itemType;
                 slot[i].GetComponent<Slot>().ID = itemID;
                 slot[i].GetComponent<Slot>().description = itemDescription;
 
-                break;
+                itemObject.transform.parent = slot[i].transform;
+                itemObject.SetActive(false);
+
+                slot[i].GetComponent<Slot>().UpdateSlot();
+                slot[i].GetComponent<Slot>().empty = false;
+                
             }
+
+            return;
         }
     }
 
