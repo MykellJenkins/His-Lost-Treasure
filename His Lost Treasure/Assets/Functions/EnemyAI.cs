@@ -19,6 +19,16 @@ public class EnemyAI : MonoBehaviour, IDamage
     [SerializeField] int HP;
     [SerializeField] float attackRate;
 
+    [Header("---Audio---")]
+    [SerializeField] AudioSource aud;
+    [SerializeField] AudioClip[] audHurt;
+    [SerializeField] float audHurtVol;
+    [SerializeField] AudioClip[] audAttack;
+    [SerializeField] float audAttackVol;
+    [SerializeField] AudioClip[] audSteps;
+    [SerializeField] float audStepsVol;
+
+
     Color ColorOG;
 
     Vector3 playerDir;
@@ -31,6 +41,7 @@ public class EnemyAI : MonoBehaviour, IDamage
     float stoppingDistOG;
 
     bool playerInRange;
+    bool isPlayingSteps;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -106,6 +117,8 @@ public class EnemyAI : MonoBehaviour, IDamage
 
         attackAnimation();
 
+        aud.PlayOneShot(audAttack[Random.Range(0, audAttack.Length)], audAttackVol);
+
         //Q: How do I get him to do the animation and damage the player?    ?
         //First: find the player                                            x
         //Second: get in range to the player                                x
@@ -124,6 +137,9 @@ public class EnemyAI : MonoBehaviour, IDamage
         {
             if (angleToPlayer <= FOV)
             {
+                
+                // Problem could be here for new player char locating 
+
                 agent.SetDestination(GameManager.Instance.playerScript.transform.position);
 
                 if (agent.remainingDistance <= agent.stoppingDistance)
@@ -165,7 +181,11 @@ public class EnemyAI : MonoBehaviour, IDamage
     public void TakeDamage(int damageAmount, Vector3 attackerPosition)
     {
         HP -= damageAmount;
+        aud.PlayOneShot(audHurt[Random.Range(0, audHurt.Length)], audHurtVol);
+
+        // Problem could be here for new player char locating 
         agent.SetDestination(GameManager.Instance.playerScript.transform.position);
+        
         StartCoroutine(flashRed());
 
         if(HP <= 0)
