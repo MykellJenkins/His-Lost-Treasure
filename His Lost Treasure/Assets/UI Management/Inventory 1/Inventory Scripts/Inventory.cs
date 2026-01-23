@@ -15,7 +15,13 @@ public class Inventory : MonoBehaviour
 
     void Start()
     {
+        allSlots = 59;
+        slot = new GameObject[allSlots];
 
+        for (int i = 0; i < allSlots; i++)
+        {
+            slot[i] = slotHolder.transform.GetChild(i).gameObject;
+        }
     }
 
 
