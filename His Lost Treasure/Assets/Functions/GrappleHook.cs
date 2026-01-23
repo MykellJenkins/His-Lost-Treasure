@@ -15,6 +15,9 @@ public class GrappleHook : MonoBehaviour
     Vector3 grapplePos;
     Vector3 startingGrapple;
     bool isGrappling;
+   
+   
+    
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() {
@@ -23,10 +26,9 @@ public class GrappleHook : MonoBehaviour
     }
     // Update is called once per frame
     private void Update()
-    { 
-        Debug.DrawRay(GameManager.Instance.playerPrefab.GetComponent<CinemachineCamera>().transform.position, 
-            GameManager.Instance.playerPrefab.GetComponent<CinemachineCamera>().transform.forward *
-            maxGrappleDistance, Color.red);
+    {
+        Debug.DrawRay(this.grappleCam.transform.position, this.grappleCam.transform.forward * maxGrappleDistance, Color.red);
+
         HandleGrapple();
     }
     void FixedUpdate()
@@ -35,6 +37,7 @@ public class GrappleHook : MonoBehaviour
     } 
     void HandleGrapple() 
     {
+        Debug.Log("HandleGrapple called");
         if (Input.GetKeyDown(KeyCode.F))
         {
             freeLookCam.Priority = 0; 
@@ -45,8 +48,8 @@ public class GrappleHook : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.F) && !isGrappling) 
         {
             RaycastHit hit;
-            if (Physics.Raycast(GameManager.Instance.playerPrefab.GetComponent<CinemachineCamera>().transform.position, 
-            GameManager.Instance.playerPrefab.GetComponent<CinemachineCamera>().transform.forward, out hit, 
+            if (Physics.Raycast(this.grappleCam.transform.position,
+            this.grappleCam.transform.forward, out hit, 
             maxGrappleDistance, ~ignoreLayer) && hit.collider.CompareTag("GrapplePoint"))
             {
                 Debug.Log("Hit: " + hit.collider.name);
@@ -73,6 +76,7 @@ public class GrappleHook : MonoBehaviour
                 isGrappling = false;
                 grapplePos = Vector3.zero;
                 rb.useGravity = true;
+                
             }
         }
       
