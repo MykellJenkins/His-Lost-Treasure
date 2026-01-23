@@ -40,8 +40,9 @@ public class GrappleHook : MonoBehaviour
             grappleCam.Priority = 20;
             freeLookCam.gameObject.SetActive(false);
             grappleCam.gameObject.SetActive(true);
-    { 
-        if (Input.GetKeyDown(KeyCode.F) && !isGrappling) 
+        }
+    
+        if (Input.GetKeyUp(KeyCode.F) && !isGrappling) 
         {
             RaycastHit hit;
             if (Physics.Raycast(GameManager.Instance.playerScript.transform.position, Camera.main.transform.forward,
@@ -52,16 +53,10 @@ public class GrappleHook : MonoBehaviour
                 isGrappling = true;
                 rb.useGravity = false;
             }
-        } 
-
-        if (Input.GetKeyUp(KeyCode.F))
-        {
             freeLookCam.Priority = 20;
             grappleCam.Priority = 0;
             freeLookCam.gameObject.SetActive(true);
             grappleCam.gameObject.SetActive(false);
-            
-            isGrappling = false;
         }
     }
     void HandleGrappling()
