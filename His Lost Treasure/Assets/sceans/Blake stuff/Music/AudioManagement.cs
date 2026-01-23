@@ -4,10 +4,10 @@ using System.Collections.Generic;
 
 public class AudioManagement : MonoBehaviour
 {
+    public AudioClip defaultAmbience;
+
     public AudioSource track01, track02;
     private bool isPlayingTrack01;
-
-
 
     public static AudioManagement instance;
     
@@ -26,6 +26,8 @@ public class AudioManagement : MonoBehaviour
         track01 = gameObject.AddComponent<AudioSource>();
         track02 = gameObject.AddComponent<AudioSource>();
         isPlayingTrack01 = true;
+
+        SwapTrack(defaultAmbience);
     }
 
 
