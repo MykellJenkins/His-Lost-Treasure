@@ -9,6 +9,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Manager References")]
+    public GameObject playerPrefab;
     public Player playerScript;
     public PlayerSaveSystem playersave;
     public Node currentNode;

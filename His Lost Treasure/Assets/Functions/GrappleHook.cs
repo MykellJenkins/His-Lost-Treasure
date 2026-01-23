@@ -7,25 +7,26 @@ public class GrappleHook : MonoBehaviour
 
     [SerializeField] Rigidbody rb;
 
-    [SerializeField] int maxGrappleDistance; 
+    [SerializeField] int maxGrappleDistance;
     [SerializeField] int grappleSpeed;
     [SerializeField] CinemachineCamera freeLookCam;
     [SerializeField] CinemachineCamera grappleCam;
 
-    Vector3 grapplePos; 
-
-    bool isGrappling; 
+    Vector3 grapplePos;
+    Vector3 startingGrapple;
+    bool isGrappling;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start() {
-        freeLookCam.Priority = 10;
+        freeLookCam.Priority = 20;
         grappleCam.Priority = 0;
     }
     // Update is called once per frame
     private void Update()
-    {
-        
-        Debug.DrawRay(Camera.main.transform.position, Camera.main.transform.forward * maxGrappleDistance, Color.red);
+    { 
+        Debug.DrawRay(GameManager.Instance.playerPrefab.GetComponent<CinemachineCamera>().transform.position, 
+            GameManager.Instance.playerPrefab.GetComponent<CinemachineCamera>().transform.forward *
+            maxGrappleDistance, Color.red);
         HandleGrapple();
     }
     void FixedUpdate()
@@ -36,27 +37,27 @@ public class GrappleHook : MonoBehaviour
     {
         if (Input.GetKeyDown(KeyCode.F))
         {
-            freeLookCam.Priority = 0;
+            freeLookCam.Priority = 0; 
             grappleCam.Priority = 20;
-            freeLookCam.gameObject.SetActive(false);
-            grappleCam.gameObject.SetActive(true);
+            
         }
     
         if (Input.GetKeyUp(KeyCode.F) && !isGrappling) 
         {
             RaycastHit hit;
-            if (Physics.Raycast(GameManager.Instance.playerScript.transform.position, Camera.main.transform.forward,
-                out hit, maxGrappleDistance, ~ignoreLayer) && hit.collider.CompareTag("GrapplePoint"))
+            if (Physics.Raycast(GameManager.Instance.playerPrefab.GetComponent<CinemachineCamera>().transform.position, 
+            GameManager.Instance.playerPrefab.GetComponent<CinemachineCamera>().transform.forward, out hit, 
+            maxGrappleDistance, ~ignoreLayer) && hit.collider.CompareTag("GrapplePoint"))
             {
                 Debug.Log("Hit: " + hit.collider.name);
                 grapplePos = hit.point;
                 isGrappling = true;
                 rb.useGravity = false;
+                startingGrapple = rb.position;
             }
-            freeLookCam.Priority = 20;
+            freeLookCam.Priority = 20; 
             grappleCam.Priority = 0;
-            freeLookCam.gameObject.SetActive(true);
-            grappleCam.gameObject.SetActive(false);
+            
         }
     }
     void HandleGrappling()
@@ -75,6 +76,19 @@ public class GrappleHook : MonoBehaviour
             }
         }
       
+    }
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(Vector3.Distance(startingGrapple, rb.position) > 1)
+        {
+            if (isGrappling) 
+            {
+                isGrappling = false;
+                grapplePos = Vector3.zero;
+                rb.useGravity = true;
+            }
+        }
+        
     }
 
 }
