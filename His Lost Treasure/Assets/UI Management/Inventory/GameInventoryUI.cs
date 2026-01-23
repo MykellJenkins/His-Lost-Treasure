@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -6,7 +7,8 @@ public class GameInventoryUI : MonoBehaviour
     public static GameInventoryUI Instance;
 
     public Text coinText;
-    public Image reserveIcon;
+    public Transform slotContainer;
+    public GameObject itemSlotPrefab;
 
     void Awake()
     {
@@ -18,16 +20,20 @@ public class GameInventoryUI : MonoBehaviour
         coinText.text = amount.ToString();
     }
 
-    public void UpdateReserve(GameItem item)
+    public void UpdateItems(List<GameItem> items, int selectedIndex)
     {
-        if (item == null)
+        // Clear old
+        foreach (Transform child in slotContainer)
+            Destroy(child.gameObject);
+
+        for (int i = 0; i < items.Count; i++)
         {
-            reserveIcon.enabled = false;
-        }
-        else
-        {
-            reserveIcon.enabled = true;
-            reserveIcon.sprite = item.icon;
+            GameObject slot = Instantiate(itemSlotPrefab, slotContainer);
+            Image icon = slot.GetComponent<Image>();
+            icon.sprite = items[i].icon;
+
+            // Highlight selected
+            slot.GetComponent<Image>().color = (i == selectedIndex) ? Color.yellow : Color.white;
         }
     }
 }

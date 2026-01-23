@@ -8,7 +8,7 @@ public class PowerUpPickup : MonoBehaviour
     {
         if (!other.CompareTag("Player")) return;
 
-        GameInventory.Instance.SetReserve(item);
+        GameInventory.Instance.AddItem(item);
         Destroy(gameObject);
     }
 }
