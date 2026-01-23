@@ -33,9 +33,21 @@ public class AudioManagement : MonoBehaviour
 
     public void SwapTrack(AudioClip newClip)
     { 
+        if (isPlayingTrack01)
+        {
+            track02.clip = newClip;
+            track02.Play();
+            track01.Stop();
+        }
+        else
+        {
+            track01.clip = newClip;
+            track01.Play();
+            track02.Stop();
+        }
+        isPlayingTrack01 = !isPlayingTrack01;
 
-    
-    
+
     }
 
 
