@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4d2fecb95d8a38849b85842387bba605, type: 3}
   m_Name: Coins
   m_EditorClassIdentifier: Assembly-CSharp::InventoryItem
-  itemID: 
+  itemID: Coin
   itemName: Coins
-  icon: {fileID: 0}
+  icon: {fileID: -1651852199, guid: a18403a957edf0943b61eaeb7030cd61, type: 3}
   stackable: 1

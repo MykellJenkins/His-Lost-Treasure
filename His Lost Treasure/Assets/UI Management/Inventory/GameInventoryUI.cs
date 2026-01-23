@@ -11,6 +11,30 @@ public class GameInventoryUI : MonoBehaviour
     public Transform slotContainer;
     public GameObject itemSlotPrefab;
 
+    public CanvasGroup canvasGroup;
+
+    void Start()
+    {
+        canvasGroup.alpha = 0;
+        canvasGroup.interactable = false;
+        canvasGroup.blocksRaycasts = false;
+    }
+
+    void Update()
+    {
+        if (Input.GetKeyDown(KeyCode.Tab))
+        {
+            ToggleInventory();
+        }
+    }
+
+    public void ToggleInventory()
+    {
+        if (canvasGroup.alpha > 0)
+            StartCoroutine(FadeOut());
+        else
+            StartCoroutine(FadeIn());
+    }
     void Awake()
     {
         Instance = this;
@@ -37,4 +61,38 @@ public class GameInventoryUI : MonoBehaviour
             slot.GetComponent<Image>().color = (i == selectedIndex) ? Color.yellow : Color.white;
         }
     }
+    IEnumerator FadeIn()
+    {
+        canvasGroup.interactable = true;
+        canvasGroup.blocksRaycasts = true;
+
+        float t = 0;
+        while (t < 1f)
+        {
+            t += Time.deltaTime * 3;
+            canvasGroup.alpha = Mathf.Lerp(0, 1, t);
+            yield return null;
+        }
+        canvasGroup.alpha = 1;
+    }
+
+    IEnumerator FadeOut()
+    {
+        canvasGroup.interactable = false;
+        canvasGroup.blocksRaycasts = false;
+
+        float t = 0;
+        while (t < 1f)
+        {
+            t += Time.deltaTime * 3;
+            canvasGroup.alpha = Mathf.Lerp(1, 0, t);
+            yield return null;
+        }
+        canvasGroup.alpha = 0;
+
+
+    }
 }
+
+
+
