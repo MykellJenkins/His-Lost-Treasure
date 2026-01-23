@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections.Generic;
 
 public class GameInventory : MonoBehaviour
 {
@@ -28,9 +29,19 @@ public class GameInventory : MonoBehaviour
     }
     void Update()
     {
-        if (reserveItem != null && Input.GetKeyDown(KeyCode.E))
+        if (Input.GetKeyDown(KeyCode.E))
         {
-            UseReserveItem();
+            UseSelectedItem();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Q))
+        {
+            SelectPreviousItem();
+        }
+
+        if (Input.GetKeyDown(KeyCode.R))
+        {
+            SelectNextItem();
         }
     }
 
