@@ -79,7 +79,7 @@ public class Inventory : MonoBehaviour
                 
             }
 
-            return;
+            
         }
     }
 
