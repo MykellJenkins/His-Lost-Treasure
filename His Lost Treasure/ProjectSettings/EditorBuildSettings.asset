@@ -17,6 +17,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/PlayGame/LevelTwo.unity
     guid: 2b1d72fecdc07f244a3d0265b6d7894e
+  - enabled: 1
+    path: Assets/sceans/Blake stuff/Credits.unity
+    guid: 2885dcb9f3d1b254eaee26b7bb2d9538
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
