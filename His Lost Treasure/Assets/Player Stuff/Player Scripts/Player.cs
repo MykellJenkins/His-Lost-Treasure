@@ -321,7 +321,7 @@ public class Player : MonoBehaviour, IDamage
                 break;
 
             case PlayerState.Crouch:
-                ApplyCrouchMovement();
+                Move(crouchSpeed);
                 break;
 
             case PlayerState.Slide:
