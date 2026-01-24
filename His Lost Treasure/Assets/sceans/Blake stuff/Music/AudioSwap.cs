@@ -6,14 +6,26 @@ public class AudioSwap : MonoBehaviour
 {
     public AudioClip newTrack;
 
-
     private void OnTriggerEnter(Collider other)
     {
         if (other.CompareTag("Player"))
         {
-            AudioClip newClip = Resources.Load<AudioClip>("NewAmbience"); // Replace with your audio clip path
             AudioManagement.instance.SwapTrack(newTrack);
         }
-
     }
+
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("Player"))
+        {
+            AudioManagement.instance.ReturntoDefault();
+        }
+    }
+
+
+
+
+
+
+
 }
