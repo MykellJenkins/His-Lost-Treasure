@@ -8,7 +8,6 @@ public class AddPoints : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            HighScoreManager.Instance.SendMessage("Scoring");
             HighScoreManager.Instance.AddPoints(pointsToAdd);
             Destroy(gameObject);
         }

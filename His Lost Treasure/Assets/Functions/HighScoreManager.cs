@@ -12,6 +12,14 @@ public class HighScoreManager : MonoBehaviour
     private int badScore;
     public int points;
 
+    void Awake()
+    {
+        if (Instance == null)
+            Instance = this;
+        else
+            Destroy(gameObject);
+    }
+
     void Start()
     {
         score = 0;
@@ -34,6 +42,7 @@ public class HighScoreManager : MonoBehaviour
     public void AddPoints(int amount)
     {
         points += amount;
+        Debug.Log("Added points: " + amount);
 
     }
 
