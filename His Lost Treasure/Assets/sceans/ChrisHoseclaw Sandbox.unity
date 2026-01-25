@@ -7231,8 +7231,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 301399e7bff168348ba5e2bfd229f7ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  player: {fileID: 0}
   playerScript: {fileID: 1040050369683510554}
-  playersave: {fileID: 0}
   currentNode: {fileID: 5576088922541879303, guid: ad7359adc5168c944ad61b3501c64c40, type: 3}
   rmInstance: {fileID: 8546124400308742169}
   menuPause: {fileID: 2864301686651494289}
