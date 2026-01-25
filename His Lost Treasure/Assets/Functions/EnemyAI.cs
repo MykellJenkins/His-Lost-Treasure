@@ -2,6 +2,7 @@ using System.Collections;
 using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.EventSystems;
 
 public class EnemyAI : MonoBehaviour, IDamage
 {
@@ -19,6 +20,17 @@ public class EnemyAI : MonoBehaviour, IDamage
     [SerializeField] int HP;
     [SerializeField] float attackRate;
 
+    [Header("---Audio---")]
+    [SerializeField] AudioSource aud;
+    [SerializeField] AudioClip[] audHurt;
+    [SerializeField] float audHurtVol;
+    [SerializeField] AudioClip[] audAttack;
+    [SerializeField] float audAttackVol;
+    [SerializeField] AudioClip[] audSteps;
+    [SerializeField] float audStepsVol;
+    [SerializeField] float stepRate;
+
+
     Color ColorOG;
 
     Vector3 playerDir;
@@ -26,11 +38,13 @@ public class EnemyAI : MonoBehaviour, IDamage
 
     float attackTimer;
     float roamTimer;
+    float stepsTimer;
 
     float angleToPlayer;
     float stoppingDistOG;
 
     bool playerInRange;
+    bool isPlayingSteps;
 
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
@@ -47,11 +61,12 @@ public class EnemyAI : MonoBehaviour, IDamage
         if (agent.remainingDistance < 0.01f)
             roamTimer += Time.deltaTime;
         locomotionAnim();
+        CheckSteps();
         if (playerInRange && !canSeePlayer())
         {
             checkRoam();
         }
-        if (playerInRange && canSeePlayer() && (agent.remainingDistance <= agent.stoppingDistance))
+        if (playerInRange && canSeePlayer() && agent.remainingDistance <= agent.stoppingDistance && attackTimer >= attackRate)
         {
             attack();
         }
@@ -69,14 +84,23 @@ public class EnemyAI : MonoBehaviour, IDamage
         anim.SetFloat("Speed", Mathf.MoveTowards(agentSpeedAnim, agentSpeedCur, Time.deltaTime * animTranSpeed));
     }
 
-    void attackAnimation()
+    void CheckSteps()
     {
-        anim.SetTrigger("Attack");
+        if(agent.hasPath && agent.velocity.sqrMagnitude > 0.1f)
+        {
+            if (!isPlayingSteps)
+            {
+                StartCoroutine(playSteps());
+            }
+        }
     }
 
-    IEnumerator AttackTiming()
+    IEnumerator playSteps()
     {
-        yield return new WaitForSeconds(attackRate);
+        isPlayingSteps = true;
+        aud.PlayOneShot(audSteps[Random.Range(0, audSteps.Length)], audStepsVol);
+        yield return new WaitForSeconds(stepRate);
+        isPlayingSteps = false;
     }
 
     void checkRoam()
@@ -102,16 +126,10 @@ public class EnemyAI : MonoBehaviour, IDamage
 
     void attack()
     {
+        anim.SetTrigger("Attack");
+        aud.PlayOneShot(audAttack[Random.Range(0, audAttack.Length)], audAttackVol);
+        anim.SetTrigger("Exit");
         attackTimer = 0f;
-
-        attackAnimation();
-
-        //Q: How do I get him to do the animation and damage the player?    ?
-        //First: find the player                                            x
-        //Second: get in range to the player                                x
-        //Third: play animation toward the player                           x
-        //Fourth: damage the player hopefully if I set up the sword right   ?
-
     }
 
     bool canSeePlayer()
@@ -124,6 +142,9 @@ public class EnemyAI : MonoBehaviour, IDamage
         {
             if (angleToPlayer <= FOV)
             {
+                
+                // Problem could be here for new player char locating 
+
                 agent.SetDestination(GameManager.Instance.playerScript.transform.position);
 
                 if (agent.remainingDistance <= agent.stoppingDistance)
@@ -165,7 +186,11 @@ public class EnemyAI : MonoBehaviour, IDamage
     public void TakeDamage(int damageAmount, Vector3 attackerPosition)
     {
         HP -= damageAmount;
+        aud.PlayOneShot(audHurt[Random.Range(0, audHurt.Length)], audHurtVol);
+
+        // Problem could be here for new player char locating 
         agent.SetDestination(GameManager.Instance.playerScript.transform.position);
+        
         StartCoroutine(flashRed());
 
         if(HP <= 0)
@@ -180,4 +205,5 @@ public class EnemyAI : MonoBehaviour, IDamage
         yield return new WaitForSeconds(0.1f);
         model.material.color = ColorOG;
     }
+
 }

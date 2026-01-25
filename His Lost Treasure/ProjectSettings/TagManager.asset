@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - pushable
+  - GrapplePoint
   - Item
   layers:
   - Default
@@ -23,7 +24,7 @@ TagManager:
   - Pushable
   - Platfform
   - Item
-  - 
+  - ground
   - 
   - 
   - 

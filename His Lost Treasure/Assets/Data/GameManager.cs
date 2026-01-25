@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Cinemachine;
 
 
 public class GameManager : MonoBehaviour
@@ -8,8 +9,9 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Manager References")]
+    public GameObject player;
     public Player playerScript;
-    public PlayerSaveSystem playersave;
+    //public PlayerSaveSystem playersave;
     public Node currentNode;
     public RespawnManager rmInstance; // Added RespawnManager reference
 
@@ -25,6 +27,7 @@ public class GameManager : MonoBehaviour
     [SerializeField] AudioSource pauseMenuMusic;
     [SerializeField] float audioFadeDuration = 0.5f;
 
+    private PlayerSaveSystem data;
     public bool isPaused { get; private set; }
     public bool isGameOver = false;
     public bool endOfLevel = false;
@@ -47,7 +50,7 @@ public class GameManager : MonoBehaviour
     {
         StartCoroutine(InitializePlayerCoroutine());
         Time.timeScale = 1f;
-
+        Application.targetFrameRate = 30;
         if (gameplayMusic != null) gameplayMusic.Play();
     }
 
@@ -165,11 +168,12 @@ public class GameManager : MonoBehaviour
         // Unlock next node
         currentNode?.CompleteLevel();
 
+        data.SavePlayerProgress();
         // Save progress: current node is this one
-        ProgressSaveData data = SavePlayerData.Instance.LoadProgress() ?? new ProgressSaveData();
-        data.currentNodeId = currentNode?.NodeId;
-        SavePlayerData.Instance.SaveProgress(data);
-        //playersave.SavePlayerProgress();
+        ProgressSaveData datap = SavePlayerData.Instance.LoadProgress() ?? new ProgressSaveData();
+        datap.currentNodeId = currentNode?.NodeId;
+        SavePlayerData.Instance.SaveProgress(datap);
+        
         ShowMenu(menuWin);
     }
 
@@ -177,7 +181,7 @@ public class GameManager : MonoBehaviour
     {
         if (isGameOver) return;
         isGameOver = true;
-        playersave.SavePlayerProgress();
+        data.SavePlayerProgress();
         SetState(true);
         gameplayMusic?.Stop();
         pauseMenuMusic?.Stop();
@@ -190,7 +194,7 @@ public class GameManager : MonoBehaviour
     {
         isPaused = paused;
         //if (paused)
-        //    playersave.SavePlayerProgress();
+        data.SavePlayerProgress();
         Time.timeScale = paused ? 0f : 1f;
         Cursor.visible = paused;
         Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
