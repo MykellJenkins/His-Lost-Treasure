@@ -1,6 +1,7 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Cinemachine;
 
 
 public class GameManager : MonoBehaviour
@@ -8,6 +9,7 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
 
     [Header("Manager References")]
+    public GameObject player;
     public Player playerScript;
     //public PlayerSaveSystem playersave;
     public Node currentNode;
