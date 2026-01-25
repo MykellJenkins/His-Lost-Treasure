@@ -5,6 +5,8 @@ TagManager:
   serializedVersion: 3
   tags:
   - pushable
+  - GrapplePoint
+  - Item
   layers:
   - Default
   - TransparentFX
@@ -21,8 +23,8 @@ TagManager:
   - Chckpoints
   - Pushable
   - Platfform
-  - 
-  - 
+  - Item
+  - ground
   - 
   - 
   - 
