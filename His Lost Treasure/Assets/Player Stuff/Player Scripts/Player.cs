@@ -1,3 +1,4 @@
+using System.Collections;
 using UnityEngine;
 
 public enum PlayerState 
@@ -11,18 +12,23 @@ public enum PlayerState
     Damage
 }
 public class Player : MonoBehaviour, IDamage
-{ 
+{
+    [Header("Camera Controls")]
+    public float mouseSensitivity = 4f;
+    public bool invertY = false;
+
     // Components
-    private Rigidbody rb; 
+    private Rigidbody rb;
     private CapsuleCollider capsule;
-    public Transform cam;
+    private Transform cam;
 
     // State Machine
-    public PlayerState currentState = PlayerState.Idle; 
+    public PlayerState currentState = PlayerState.Idle;
 
     // Lives
     public int maxLives = 3;
-    private bool isHurt = false;
+    public bool isHurt = false;
+    //bool isMovingUp;
 
     // dmage effect
     public float damageStunDuration = 2f;
@@ -32,80 +38,113 @@ public class Player : MonoBehaviour, IDamage
     public float invincibilityTimeAfterDamage = 2f;
 
     // Movement
-    public float moveSpeed = 5f; 
-    private Vector3 moveDirection; 
-    public KeyCode forwardKey = KeyCode.W; 
-    public KeyCode leftKey = KeyCode.A; 
-    public KeyCode backKey = KeyCode.S; 
+    public float moveSpeed = 5f;
+    private Vector3 moveDirection;
+    public KeyCode forwardKey = KeyCode.W;
+    public KeyCode leftKey = KeyCode.A;
+    public KeyCode backKey = KeyCode.S;
     public KeyCode rightKey = KeyCode.D;
 
     // Sprinting
     public float SprintSpeed = 6f;
     public KeyCode RunKey = KeyCode.LeftShift;
+    bool IsSprinting;
 
     // Jumping
     public float jumpForce = 10f;
     public int jumpLeft = 2;
     public int jumps = 2;
-    public float fallMultiplier = 2.5f; 
-    public float ascendMultiplier = 2f; 
-    public KeyCode jumpKey = KeyCode.Space; 
+    public float fallMultiplier = 2.5f;
+    public float ascendMultiplier = 2f;
+    public KeyCode jumpKey = KeyCode.Space;
 
     // Crouch & Slide
-    public float crouchHeight = 1f; 
-    public float crouchSpeed = 5f; 
-    public KeyCode crouchKey = KeyCode.LeftControl; 
-    public float slideSpeed = 15f; 
-    public float slideDuration = 1f; 
-    private float slideTimer; 
+    public float crouchHeight = 1f;
+    public float crouchSpeed = 5f;
+    public KeyCode crouchKey = KeyCode.LeftControl;
+    public float slideSpeed = 15f;
+    public float slideDuration = 1f;
+    private float slideTimer;
     private Vector3 slideDirection;
     public float slideMinSpeed = 4f;
 
     //Ground & Ceiling
-    public LayerMask groundLayer; 
-    public LayerMask ceilingMask; 
-    public float ceilingCheckDistance = 0.1f; 
-    private bool isGrounded; 
+    public LayerMask groundLayer;
+    public LayerMask ceilingMask;
+    public float ceilingCheckDistance = 0.1f;
+    private bool isGrounded;
     private float playerHeight;
-    private float targetHeight; 
+    private float targetHeight;
+
+    //damage flash
+    public float flashInterval = 0.1f;
+
+    private Renderer[] renderers;
+    private Coroutine flashCoroutine;
 
     // ????????????????????????????????????????????? 
     // UNITY METHODS 
     // ?????????????????????????????????????????????
-    void Start() 
+    void OnEnable()
     {
-        rb = GetComponent<Rigidbody>(); 
-        rb.freezeRotation = true; 
-        capsule = GetComponent<CapsuleCollider>(); 
-        playerHeight = capsule.height; 
+        currentState = PlayerState.Idle;
+        isHurt = false;
+        invincibilityDuration = 0;
+    }
+
+    void Start()
+    {
+        // 1. Setup components
+        rb = GetComponent<Rigidbody>();
+        rb.freezeRotation = true;
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
+        capsule = GetComponent<CapsuleCollider>();
+        playerHeight = capsule.height;
         targetHeight = playerHeight;
         if (cam == null) cam = Camera.main.transform;
         damageEffects = GetComponent<PlayerDamageEffects>();
-    } 
-    
-    void Update() 
-    { 
-        CheckGround();
-        ReadMovementInput(); 
-        HandleStateTransitions(); 
-        SmoothCrouchHeight(); 
+        renderers = GetComponentsInChildren<Renderer>();
 
-        if (invincibilityDuration > 0)
+        // 2. Load Global Settings (Volume/Sensitivity)
+        LoadPlayerControls();
+
+        // 3. Load Save State
+        PlayerSaveData savedPlayer = SavePlayerData.Instance.LoadPlayer();
+        if (savedPlayer != null)
         {
-            invincibilityDuration -= Time.deltaTime;
+            LoadFromSave(savedPlayer);
         }
-    } 
+    }
 
-    void FixedUpdate() 
-    { 
-        ApplyStateMovement(); 
+    void Update()
+    {
+        CheckGround();
+        ReadMovementInput();
+        HandleStateTransitions();
+        SmoothCrouchHeight();
+        //if (rb.linearVelocity == transform.up)
+        //{
+        //    isMovingUp = true;
+        //}
+        //else { isMovingUp = false; }
+        //if (invincibilityDuration > 0)
+        //{
+        //    invincibilityDuration -= Time.deltaTime;
+        //}
+    }
+
+    void FixedUpdate()
+    {
+        ApplyStateMovement();
         ApplyJumpPhysics();
-    } 
+    }
+
+
 
     // ????????????????????????????????????????????? 
     // INPUT 
     // ?????????????????????????????????????????????
-    void ReadMovementInput() 
+    void ReadMovementInput()
     {
         float horizontal = 0;
         float vertical = 0;
@@ -137,25 +176,25 @@ public class Player : MonoBehaviour, IDamage
             // Smoothly rotate the player model to face where they are moving
             transform.forward = Vector3.Slerp(transform.forward, moveDirection, Time.deltaTime * 10f);
         }
-    } 
+    }
 
     // ????????????????????????????????????????????? 
     // STATE TRANSITIONS 
     // ?????????????????????????????????????????????
-    void HandleStateTransitions() 
+    void HandleStateTransitions()
     {
         if (Input.GetKeyDown(jumpKey) && jumpLeft > 0)
         {
             currentState = PlayerState.Jump;
-            Jump(); 
-            return; 
+            Jump();
+            return;
         }
 
-        switch (currentState) 
+        switch (currentState)
         {
 
             case PlayerState.Idle:
-                if (moveDirection.magnitude > 0.1f)
+                if (moveDirection.magnitude > 0.1f && isGrounded)
                 {
                     // Check if we should start sprinting immediately from idle
                     currentState = PlayerState.Run;
@@ -183,7 +222,7 @@ public class Player : MonoBehaviour, IDamage
             case PlayerState.Sprint:
                 // Transition OUT of Sprint
                 if (moveDirection.magnitude <= 0.1f) currentState = PlayerState.Idle;
-                if (!Input.GetKey(RunKey)) currentState = PlayerState.Run;
+                if (!Input.GetKey(RunKey) && isGrounded) currentState = PlayerState.Run;
                 if (invincibilityDuration <= 0)
                 {
                     if (isHurt == true) currentState = PlayerState.Damage;
@@ -193,36 +232,36 @@ public class Player : MonoBehaviour, IDamage
                 if (isGrounded && Input.GetKeyDown(crouchKey)) StartSlideState(); // Sprinting usually slides
                 break;
 
-            case PlayerState.Jump: 
-                if (isGrounded) 
-                    currentState = moveDirection.magnitude > 0.1f ? PlayerState.Run : PlayerState.Idle; 
-            break; 
+            case PlayerState.Jump:
+                if (isGrounded)
+                    currentState = moveDirection.magnitude > 0.1f ? PlayerState.Run : PlayerState.Idle;
+                break;
 
             case PlayerState.Crouch:
                 // If crouch key released ? try to stand
-                if (Input.GetKeyUp(crouchKey)) 
-                { 
-                    TryStand(); 
-                    break; 
-                } 
+                if (Input.GetKeyUp(crouchKey))
+                {
+                    TryStand();
+                    break;
+                }
                 // If crouch key pressed again while moving fast ? slide
-                if (Input.GetKeyDown(crouchKey) && rb.linearVelocity.magnitude > slideMinSpeed) 
-                { 
+                if (Input.GetKeyDown(crouchKey) && rb.linearVelocity.magnitude > slideMinSpeed)
+                {
                     StartSlideState();
-                    break; 
-                } 
+                    break;
+                }
                 // Stay crouched only while key is held
-                Crouch(); 
-            break;
+                Crouch();
+                break;
 
-            case PlayerState.Slide: 
-                slideTimer -= Time.deltaTime; 
+            case PlayerState.Slide:
+                slideTimer -= Time.deltaTime;
                 if (slideTimer <= 0)
                 {
-                    EndSlideState(); 
-                } 
+                    EndSlideState();
+                }
 
-                if(Input.GetKeyUp(crouchKey))
+                if (Input.GetKeyUp(crouchKey))
                 {
                     EndSlideState();
                     TryStand();
@@ -233,52 +272,57 @@ public class Player : MonoBehaviour, IDamage
                     TryStand();
                     currentState = PlayerState.Damage;
                 }
-            break;
+                break;
 
             case PlayerState.Damage:
                 damageTimer -= Time.deltaTime;
 
-                if (damageTimer <= 0 && isGrounded)
+                if (damageTimer <= 0)
                 {
                     isHurt = false;
                     currentState = PlayerState.Idle;
-                }
 
-                if (invincibilityDuration <= 0)
-                {
-                    invincibilityDuration = 0;
-                }
+                    // STOP FLASH ON EXIT
+                    if (flashCoroutine != null)
+                    {
+                        StopCoroutine(flashCoroutine);
+                        flashCoroutine = null;
+                    }
 
+                    SetRenderersVisible(true);
+                }
                 break;
 
 
         }
-    } 
+    }
 
     // ????????????????????????????????????????????? 
     // STATE MOVEMENT 
     // ?????????????????????????????????????????????
-    void ApplyStateMovement() 
+    void ApplyStateMovement()
     {
         if (currentState == PlayerState.Damage) return;
-        switch (currentState) 
+        switch (currentState)
         {
             case PlayerState.Idle:
             case PlayerState.Run:
                 Move(moveSpeed); // Pass the speed as a parameter
+                IsSprinting = false;
                 break;
 
             case PlayerState.Sprint:
                 Move(SprintSpeed);
+                IsSprinting = true;
                 break;
 
-            case PlayerState.Jump: 
-                MoveNormally(); 
-            break; 
+            case PlayerState.Jump:
+                MoveNormally();
+                break;
 
             case PlayerState.Crouch:
-                ApplyCrouchMovement();
-                break; 
+                Move(crouchSpeed);
+                break;
 
             case PlayerState.Slide:
                 float forceMultiplier = slideTimer / slideDuration;
@@ -286,8 +330,8 @@ public class Player : MonoBehaviour, IDamage
 
                 // Friction: Help the player slow down
                 rb.linearDamping = 1f; // Use rb.drag in older Unity versions
-                break; 
-        } 
+                break;
+        }
     }
 
     // ????????????????????????????????????????????? 
@@ -301,38 +345,54 @@ public class Player : MonoBehaviour, IDamage
         rb.AddForce(velocityChange, ForceMode.VelocityChange);
 
     }
-    void MoveNormally() 
-    { 
-        Vector3 desiredVelocity = moveDirection * moveSpeed; 
-        Vector3 currentVelocity = rb.linearVelocity; 
-        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z); 
-        rb.AddForce(velocityChange, ForceMode.VelocityChange); 
+    void MoveNormally()
+    {
 
-    } 
+        if (IsSprinting == true)
+        {
+            Vector3 desiredVelocity = moveDirection * moveSpeed;
+            Vector3 currentVelocity = rb.linearVelocity;
+            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+            rb.AddForce(velocityChange, ForceMode.VelocityChange);
+        }
+        else
+        {
+            Vector3 desiredVelocity = moveDirection * moveSpeed;
+            Vector3 currentVelocity = rb.linearVelocity;
+            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+            rb.AddForce(velocityChange, ForceMode.VelocityChange);
+        }
 
-    void Jump() 
-    { 
+    }
+
+    void Jump()
+    {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
         jumpLeft--;
         if (targetHeight == crouchHeight)
         {
             targetHeight = playerHeight;
         }
-        
-    } 
+        if (Input.GetKey(RunKey))
+        {
+            currentState = PlayerState.Sprint;
+        }
 
-    void ApplyJumpPhysics() 
-    { 
-        if (rb.linearVelocity.y < 0) 
-            rb.linearVelocity += Vector3.up * (Physics.gravity.y * (fallMultiplier - 1)) * Time.fixedDeltaTime; 
-        else if (rb.linearVelocity.y > 0) 
-            rb.linearVelocity += Vector3.up * (Physics.gravity.y * (ascendMultiplier - 1)) * Time.fixedDeltaTime; 
-    } 
+
+    }
+
+    void ApplyJumpPhysics()
+    {
+        if (rb.linearVelocity.y < 0)
+            rb.linearVelocity += Vector3.up * (Physics.gravity.y * (fallMultiplier - 1)) * Time.fixedDeltaTime;
+        else if (rb.linearVelocity.y > 0)
+            rb.linearVelocity += Vector3.up * (Physics.gravity.y * (ascendMultiplier - 1)) * Time.fixedDeltaTime;
+    }
 
     // ????????????????????????????????????????????? 
     // CROUCH & SLIDE 
     // ?????????????????????????????????????????????
-    void StartSlideState() 
+    void StartSlideState()
     {
         currentState = PlayerState.Slide;
         slideTimer = slideDuration;
@@ -344,26 +404,26 @@ public class Player : MonoBehaviour, IDamage
 
         // Optional: Add an initial burst of speed
         rb.AddForce(slideDirection * slideSpeed, ForceMode.Impulse);
-    } 
+    }
 
     void Crouch()
     {
         targetHeight = crouchHeight;
     }
 
-    void EndSlideState() 
+    void EndSlideState()
     {
         // If crouch key is still held ? crouch
-        if (Input.GetKey(crouchKey)) 
-        { 
+        if (Input.GetKey(crouchKey))
+        {
             currentState = PlayerState.Crouch;
-            return; 
-        } 
+            return;
+        }
         // Otherwise stand up
         TryStand();
     }
 
-    void TryStand() 
+    void TryStand()
     {
         // Check if there is a ceiling above the player
         bool ceilingAbove = Physics.Raycast(transform.position, Vector3.up, playerHeight * 0.5f + 0.2f, ceilingMask);
@@ -382,17 +442,17 @@ public class Player : MonoBehaviour, IDamage
         Debug.Log("TryStand called. Blocked = " + ceilingAbove);
         Debug.Log("Standing. targetHeight = " + targetHeight);
         Debug.DrawRay(transform.position + Vector3.up * (crouchHeight / 2f), Vector3.up * ((playerHeight - crouchHeight) + ceilingCheckDistance), ceilingAbove ? Color.red : Color.green);
-    } 
+    }
 
-    void SmoothCrouchHeight() 
+    void SmoothCrouchHeight()
     {
         capsule.height = Mathf.Lerp(capsule.height, targetHeight, Time.deltaTime * 10f);
-    } 
+    }
 
     // ????????????????????????????????????????????? 
     // GROUND CHECK 
     // ?????????????????????????????????????????????
-    void CheckGround() 
+    void CheckGround()
     {
         Vector3 origin = transform.position + Vector3.up * 0.1f;
         isGrounded = Physics.Raycast(origin, Vector3.down, playerHeight / 2 + 0.2f, groundLayer);
@@ -431,6 +491,11 @@ public class Player : MonoBehaviour, IDamage
             currentState = PlayerState.Damage;
             damageTimer = damageStunDuration;
             invincibilityDuration = invincibilityTimeAfterDamage;
+
+            if (flashCoroutine != null)
+                StopCoroutine(flashCoroutine);
+
+            flashCoroutine = StartCoroutine(FlashRoutine());
         }
 
         if (targetHeight == crouchHeight)
@@ -443,5 +508,95 @@ public class Player : MonoBehaviour, IDamage
         {
             damageEffects.ApplyKnockback(attackerPosition);
         }
+    }
+
+    IEnumerator FlashRoutine()
+    {
+        bool visible = true;
+
+        while (invincibilityDuration > 0)
+        {
+            visible = !visible;
+            SetRenderersVisible(visible);
+
+            yield return new WaitForSeconds(flashInterval);
+        }
+
+        // Ensure visible at end
+        SetRenderersVisible(true);
+    }
+
+    void SetRenderersVisible(bool visible)
+    {
+        foreach (Renderer r in renderers)
+        {
+            r.enabled = visible;
+        }
+    }
+
+    public void ResetPlayer()
+    {
+        currentState = PlayerState.Idle;
+        isHurt = false;
+        invincibilityDuration = 0;
+        damageTimer = 0;
+        jumpLeft = jumps;
+
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+            rb.isKinematic = false;
+        }
+
+        enabled = true; // ensure Player script is active
+    }
+
+    public PlayerSaveData GetSaveData()
+    {
+        // Pass 'this' (the player), the current transform, and the build index
+        return new PlayerSaveData(
+            maxLives,
+            transform,
+            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex
+        );
+    }
+
+    // Call this from Start() or GameManager when data is retrieved
+    public void LoadFromSave(PlayerSaveData data)
+    {
+        if (data == null) return;
+
+        this.maxLives = data.maxLives;
+
+        // Convert SerializableVector3 back to Unity Vector3
+        // Use .ToVector3() helper from the struct created previously
+        this.transform.position = data.position.ToVector3();
+
+        // Optional: Load rotation if you added it to PlayerSaveData
+        // this.transform.rotation = Quaternion.Euler(data.rotation.ToVector3());
+    }
+
+    void LoadPlayerControls()
+    {
+        MenuSaveData settings = SavePlayerData.Instance.LoadMenu();
+        if (settings != null)
+        {
+            this.mouseSensitivity = settings.mouseSensitivity;
+            this.invertY = settings.invertY;
+            // Apply sensitivity to your Cinemachine or Camera script here
+        }
+    }
+
+
+    void OnApplicationQuit()
+    {
+        // Using the Singleton to save the current snapshot of player data
+        SavePlayerData.Instance.SavePlayer(GetSaveData());
+    }
+
+    void OnDisable()
+    {
+        SavePlayerData.Instance.SavePlayer(GetSaveData());
     }
 }

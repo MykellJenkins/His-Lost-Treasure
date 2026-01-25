@@ -6,11 +6,20 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/Menu.unity
+    path: Assets/PlayGame/Menu.unity
     guid: 53e88992a019e8840958e5fadb588c74
   - enabled: 1
-    path: Assets/Scenes/TutorialLevel.unity
+    path: Assets/PlayGame/TutorialLevel.unity
     guid: d2c4531090491d14ba9ebdcb96255bea
+  - enabled: 1
+    path: Assets/PlayGame/NodeMap.unity
+    guid: a67ba2a6dabf01a40bd8b40cd58842bf
+  - enabled: 1
+    path: Assets/PlayGame/LevelTwo.unity
+    guid: 2b1d72fecdc07f244a3d0265b6d7894e
+  - enabled: 1
+    path: Assets/sceans/Blake stuff/Credits.unity
+    guid: 2885dcb9f3d1b254eaee26b7bb2d9538
   m_configObjects:
     com.unity.input.settings.actions: {fileID: -944628639613478452, guid: 052faaac586de48259a63d0c4782560b, type: 3}
   m_UseUCBPForAssetBundles: 0
