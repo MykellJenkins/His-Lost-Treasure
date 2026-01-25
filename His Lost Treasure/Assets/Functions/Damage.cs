@@ -3,9 +3,11 @@ using System.Collections;
 
 public class Damage : MonoBehaviour
 {
-    enum damageType { moving, stationary, DOT, homing }
+    enum damageType { moving, stationary, DOT, homing, crushing}
     [SerializeField] damageType type;
     [SerializeField] Rigidbody rb;
+    [SerializeField] crushingscript crush;
+    [SerializeField] Player player;
 
     [SerializeField] int damageAmount;
     [SerializeField] int speed;
@@ -13,7 +15,6 @@ public class Damage : MonoBehaviour
     [SerializeField] int destroyTime;
 
     bool isDamaging;
-
     void Start()
     {
         if (type == damageType.moving || type == damageType.homing)
@@ -26,6 +27,10 @@ public class Damage : MonoBehaviour
             }
         }
     }
+    private void Update()
+    {
+       
+    }
 
     private void OnTriggerEnter(Collider other)
     {
@@ -33,7 +38,9 @@ public class Damage : MonoBehaviour
 
         IDamage dmg = other.GetComponent<IDamage>();
 
-        if (dmg != null && type != damageType.DOT)
+       
+
+        if (dmg != null && type != damageType.DOT&& type!= damageType.crushing)
         {
             // PASS transform.position so knockback knows the direction
             dmg.TakeDamage(damageAmount, transform.position);
@@ -42,6 +49,10 @@ public class Damage : MonoBehaviour
         if (type == damageType.homing || type == damageType.moving)
         {
             Destroy(gameObject);
+        }
+        if (dmg != null && type == damageType.crushing && crush.GetIsMovingDown() /*&& !player.GetIsMovingUp()*/)
+        {
+            dmg.TakeDamage(damageAmount, transform.position);
         }
     }
 
@@ -54,6 +65,7 @@ public class Damage : MonoBehaviour
         {
             StartCoroutine(damageOther(dmg));
         }
+       
     }
 
     IEnumerator damageOther(IDamage d)

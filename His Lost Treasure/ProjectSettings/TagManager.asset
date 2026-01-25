@@ -5,24 +5,26 @@ TagManager:
   serializedVersion: 3
   tags:
   - pushable
+  - GrapplePoint
+  - Item
   layers:
   - Default
   - TransparentFX
   - Ignore Raycast
-  - 
+  - Player
   - Water
   - UI
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
-  - 
+  - BadGuys
+  - Decore
+  - Moving platforms
+  - Walls
+  - Damaging Object
+  - Win
+  - Chckpoints
+  - Pushable
+  - Platfform
+  - Item
+  - ground
   - 
   - 
   - 
