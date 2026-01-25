@@ -2,6 +2,7 @@ using System.Collections;
 using System.ComponentModel;
 using UnityEngine;
 using UnityEngine.AI;
+using UnityEngine.EventSystems;
 
 public class EnemyAI : MonoBehaviour, IDamage
 {
@@ -27,6 +28,7 @@ public class EnemyAI : MonoBehaviour, IDamage
     [SerializeField] float audAttackVol;
     [SerializeField] AudioClip[] audSteps;
     [SerializeField] float audStepsVol;
+    [SerializeField] float stepRate;
 
 
     Color ColorOG;
@@ -36,6 +38,7 @@ public class EnemyAI : MonoBehaviour, IDamage
 
     float attackTimer;
     float roamTimer;
+    float stepsTimer;
 
     float angleToPlayer;
     float stoppingDistOG;
@@ -58,11 +61,12 @@ public class EnemyAI : MonoBehaviour, IDamage
         if (agent.remainingDistance < 0.01f)
             roamTimer += Time.deltaTime;
         locomotionAnim();
+        CheckSteps();
         if (playerInRange && !canSeePlayer())
         {
             checkRoam();
         }
-        if (playerInRange && canSeePlayer() && (agent.remainingDistance <= agent.stoppingDistance))
+        if (playerInRange && canSeePlayer() && agent.remainingDistance <= agent.stoppingDistance && attackTimer >= attackRate)
         {
             attack();
         }
@@ -80,14 +84,23 @@ public class EnemyAI : MonoBehaviour, IDamage
         anim.SetFloat("Speed", Mathf.MoveTowards(agentSpeedAnim, agentSpeedCur, Time.deltaTime * animTranSpeed));
     }
 
-    void attackAnimation()
+    void CheckSteps()
     {
-        anim.SetTrigger("Attack");
+        if(agent.hasPath && agent.velocity.sqrMagnitude > 0.1f)
+        {
+            if (!isPlayingSteps)
+            {
+                StartCoroutine(playSteps());
+            }
+        }
     }
 
-    IEnumerator AttackTiming()
+    IEnumerator playSteps()
     {
-        yield return new WaitForSeconds(attackRate);
+        isPlayingSteps = true;
+        aud.PlayOneShot(audSteps[Random.Range(0, audSteps.Length)], audStepsVol);
+        yield return new WaitForSeconds(stepRate);
+        isPlayingSteps = false;
     }
 
     void checkRoam()
@@ -113,18 +126,10 @@ public class EnemyAI : MonoBehaviour, IDamage
 
     void attack()
     {
-        attackTimer = 0f;
-
-        attackAnimation();
-
+        anim.SetTrigger("Attack");
         aud.PlayOneShot(audAttack[Random.Range(0, audAttack.Length)], audAttackVol);
-
-        //Q: How do I get him to do the animation and damage the player?    ?
-        //First: find the player                                            x
-        //Second: get in range to the player                                x
-        //Third: play animation toward the player                           x
-        //Fourth: damage the player hopefully if I set up the sword right   ?
-
+        anim.SetTrigger("Exit");
+        attackTimer = 0f;
     }
 
     bool canSeePlayer()
