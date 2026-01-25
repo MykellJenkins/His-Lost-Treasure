@@ -3,10 +3,6 @@
   "WorkspaceRootPath": "C:\\Users\\shawn\\source\\repos\\His-Lost-Treasure\\",
   "Documents": [
     {
-      "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\shawn\\source\\repos\\His-Lost-Treasure\\His Lost Treasure\\Assets\\Functions\\CustomKeybinding.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
-      "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:His Lost Treasure\\Assets\\Functions\\CustomKeybinding.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
-    },
-    {
       "AbsoluteMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|C:\\Users\\shawn\\source\\repos\\His-Lost-Treasure\\His Lost Treasure\\Assets\\Functions\\DebugCommands.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
       "RelativeMoniker": "D:0:0:{A2FE74E1-B743-11D0-AE1A-00A0C90FFFC3}|\u003CMiscFiles\u003E|solutionrelative:His Lost Treasure\\Assets\\Functions\\DebugCommands.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
     }
@@ -43,19 +39,6 @@
             {
               "$type": "Document",
               "DocumentIndex": 0,
-              "Title": "CustomKeybinding.cs",
-              "DocumentMoniker": "C:\\Users\\shawn\\source\\repos\\His-Lost-Treasure\\His Lost Treasure\\Assets\\Functions\\CustomKeybinding.cs",
-              "RelativeDocumentMoniker": "His Lost Treasure\\Assets\\Functions\\CustomKeybinding.cs",
-              "ToolTip": "C:\\Users\\shawn\\source\\repos\\His-Lost-Treasure\\His Lost Treasure\\Assets\\Functions\\CustomKeybinding.cs",
-              "RelativeToolTip": "His Lost Treasure\\Assets\\Functions\\CustomKeybinding.cs",
-              "ViewState": "AgIAAAAAAAAAAAAAAAAAAA0AAAAAAAAAAAAAAA==",
-              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-25T18:22:16.525Z",
-              "EditorCaption": ""
-            },
-            {
-              "$type": "Document",
-              "DocumentIndex": 1,
               "Title": "DebugCommands.cs",
               "DocumentMoniker": "C:\\Users\\shawn\\source\\repos\\His-Lost-Treasure\\His Lost Treasure\\Assets\\Functions\\DebugCommands.cs",
               "RelativeDocumentMoniker": "His Lost Treasure\\Assets\\Functions\\DebugCommands.cs",
@@ -63,7 +46,8 @@
               "RelativeToolTip": "His Lost Treasure\\Assets\\Functions\\DebugCommands.cs",
               "ViewState": "AgIAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA==",
               "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
-              "WhenOpened": "2026-01-25T18:21:29.713Z"
+              "WhenOpened": "2026-01-25T18:21:29.713Z",
+              "EditorCaption": ""
             }
           ]
         }
