@@ -15,7 +15,7 @@ public class GrappleHook : MonoBehaviour
     Vector3 grapplePos;
     Vector3 startingGrapple;
     bool isGrappling;
-   
+    bool canGrapple;
    
     
 
@@ -27,9 +27,12 @@ public class GrappleHook : MonoBehaviour
     // Update is called once per frame
     private void Update()
     {
-        Debug.DrawRay(this.grappleCam.transform.position, this.grappleCam.transform.forward * maxGrappleDistance, Color.red);
+        if (canGrapple)
+        {
+            Debug.DrawRay(this.grappleCam.transform.position, this.grappleCam.transform.forward * maxGrappleDistance, Color.red);
 
-        HandleGrapple();
+            HandleGrapple();
+        }
     }
     void FixedUpdate()
     {
@@ -48,9 +51,7 @@ public class GrappleHook : MonoBehaviour
         if (Input.GetKeyUp(KeyCode.F) && !isGrappling) 
         {
             RaycastHit hit;
-            if (Physics.Raycast(this.grappleCam.transform.position,
-            this.grappleCam.transform.forward, out hit, 
-            maxGrappleDistance, ~ignoreLayer) && hit.collider.CompareTag("GrapplePoint"))
+            if (Physics.Raycast(this.grappleCam.transform.position, this.grappleCam.transform.forward, out hit, maxGrappleDistance, ~ignoreLayer) && hit.collider.CompareTag("GrapplePoint"))
             {
                 Debug.Log("Hit: " + hit.collider.name);
                 grapplePos = hit.point;
@@ -94,5 +95,7 @@ public class GrappleHook : MonoBehaviour
         }
         
     }
+    public bool GetCanGrapple() {  return canGrapple; }
+    public void SetCanGrapple(bool grapple){    canGrapple = grapple;   }
 
 }
