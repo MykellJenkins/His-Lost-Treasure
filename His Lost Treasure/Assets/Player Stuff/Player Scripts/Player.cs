@@ -97,6 +97,7 @@ public class Player : MonoBehaviour, IDamage
         // 1. Setup components
         rb = GetComponent<Rigidbody>();
         rb.freezeRotation = true;
+        rb.collisionDetectionMode = CollisionDetectionMode.Continuous;
         capsule = GetComponent<CapsuleCollider>();
         playerHeight = capsule.height;
         targetHeight = playerHeight;
@@ -320,7 +321,7 @@ public class Player : MonoBehaviour, IDamage
                 break;
 
             case PlayerState.Crouch:
-                ApplyCrouchMovement();
+                Move(crouchSpeed);
                 break;
 
             case PlayerState.Slide:

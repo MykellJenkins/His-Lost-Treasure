@@ -2,6 +2,7 @@ using UnityEngine;
 using UnityEngine.SceneManagement;
 using System.IO;
 using System.Collections;
+using Unity.VisualScripting;
 
 public class ButtonFunctions : MonoBehaviour
 {
@@ -32,6 +33,14 @@ public class ButtonFunctions : MonoBehaviour
     {
         ResetSceneState();
         SceneManager.LoadScene("NodeMap");
+    }
+
+    public void GotToCredits()
+    {
+       ResetSceneState();
+       SceneManager.LoadScene("Credits");
+        StartCoroutine(TransferToCredits());
+
     }
 
     public void NewGame()
@@ -69,6 +78,12 @@ public class ButtonFunctions : MonoBehaviour
     {
         AsyncOperation op = SceneManager.LoadSceneAsync(sceneName);
         while (!op.isDone) yield return null;
+    }
+
+    IEnumerator TransferToCredits()
+    {
+        yield return new WaitForSeconds(3);
+        SceneManager.LoadScene("Credits");
     }
 
     public void Quit()
