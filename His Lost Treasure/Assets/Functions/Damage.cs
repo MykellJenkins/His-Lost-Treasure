@@ -15,7 +15,6 @@ public class Damage : MonoBehaviour
     [SerializeField] int destroyTime;
 
     bool isDamaging;
-
     void Start()
     {
         if (type == damageType.moving || type == damageType.homing)
