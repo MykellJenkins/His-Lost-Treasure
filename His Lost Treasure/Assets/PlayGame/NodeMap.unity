@@ -1111,6 +1111,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6111637979501119036, guid: af894475bf998f241b5c2199318f8471, type: 3}
+      propertyPath: gameplayMusic
+      value: 
+      objectReference: {fileID: 1171111657179912919, guid: e792aa957a88f8846a5b4b926b08f8d5, type: 3}
+    - target: {fileID: 6111637979501119036, guid: af894475bf998f241b5c2199318f8471, type: 3}
+      propertyPath: pauseMenuMusic
+      value: 
+      objectReference: {fileID: 1171111657179912919, guid: e792aa957a88f8846a5b4b926b08f8d5, type: 3}
     - target: {fileID: 7220917587147306668, guid: af894475bf998f241b5c2199318f8471, type: 3}
       propertyPath: m_Name
       value: GameManager
@@ -1941,6 +1949,7 @@ SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
   - {fileID: 2145534841}
+  - {fileID: 1539716755}
   - {fileID: 1030257278}
   - {fileID: 3271361471438356378}
   - {fileID: 1701689256}
@@ -1949,7 +1958,6 @@ SceneRoots:
   - {fileID: 2021011788659738392}
   - {fileID: 8730041904946583728}
   - {fileID: 1205843615}
-  - {fileID: 1539716755}
   - {fileID: 1296005669}
   - {fileID: 724765572}
   - {fileID: 1744583960}

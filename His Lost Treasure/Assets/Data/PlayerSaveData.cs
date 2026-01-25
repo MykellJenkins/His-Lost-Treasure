@@ -4,23 +4,23 @@ using System;
 [Serializable]
 public class PlayerSaveData
 {
-    public int maxLives = 3;
+    public int maxLives;
+    public SerializableVector3 position;
     public int currentLevel;
 
-    // Use custom structs for cleaner JSON readability
-    public SerializableVector3 position;
-    public SerializableVector3 rotation;
+    // REQUIRED for LoadData<T>()
+    public PlayerSaveData()
+    {
+        maxLives = 3;
+        position = new SerializableVector3(Vector3.zero);
+        currentLevel = 0;
+    }
 
-    // Default constructor for JsonUtility
-    public PlayerSaveData() { }
-
-    // Better: Pass the specific data needed or a small interface
-    public PlayerSaveData(int lives, Transform playerTransform, int sceneIndex)
+    public PlayerSaveData(int lives, Transform t, int level)
     {
         maxLives = lives;
-        currentLevel = sceneIndex;
-        position = new SerializableVector3(playerTransform.position);
-        rotation = new SerializableVector3(playerTransform.eulerAngles);
+        position = new SerializableVector3(t.position);
+        currentLevel = level;
     }
 }
 
