@@ -5,6 +5,7 @@ TagManager:
   serializedVersion: 3
   tags:
   - pushable
+  - Item
   layers:
   - Default
   - TransparentFX
@@ -21,8 +22,8 @@ TagManager:
   - Chckpoints
   - Pushable
   - Platfform
-  - 
-  - 
+  - Item
+  - ground
   - 
   - 
   - 
