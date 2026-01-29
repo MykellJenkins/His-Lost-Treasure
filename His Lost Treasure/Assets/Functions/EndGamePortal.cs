@@ -5,11 +5,13 @@ public class EndGamePortal : MonoBehaviour
 {
     private void OnTriggerEnter(Collider other)
     {
-        if (other.gameObject.CompareTag("Player"))
-        {
-            Debug.Log("Player has reached the end game portal.");
-            GameManager.Instance.endOfLevel = true;
-        }
+        Debug.Log("Portal triggered by: " + other.name);
 
+        if (!other.CompareTag("Player")) return;
+
+        Debug.Log("Calling TriggerWin()");
+        GameManager.Instance.TriggerWin();
+
+        GetComponent<Collider>().enabled = false;
     }
 }
