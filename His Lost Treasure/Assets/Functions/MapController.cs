@@ -108,8 +108,18 @@ public class MapController : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.J) || Input.GetKeyDown(KeyCode.RightArrow))
         {
             Node next = currentNode.GetNextNode();
-            if (next != null && NodeMapManager.Instance.IsNodeUnlocked(next.NodeId))
-                SetTargetNode(next);
+            if (next != null)
+            {
+                // Check if the node is unlocked
+                if (NodeMapManager.Instance.IsNodeUnlocked(next.NodeId))
+                {
+                    SetTargetNode(next);
+                }
+                else
+                {
+                    Debug.Log("Next node is locked!");
+                }
+            }
         }
 
         // Move to previous node (Left / A)
@@ -117,21 +127,39 @@ public class MapController : MonoBehaviour
         {
             Node prev = GetPreviousNode();
             if (prev != null)
-                SetTargetNode(prev);
+            {
+                // Check if previous node is unlocked too
+                if (NodeMapManager.Instance.IsNodeUnlocked(prev.NodeId))
+                {
+                    SetTargetNode(prev);
+                }
+                else
+                {
+                    Debug.Log("Previous node is locked!");
+                }
+            }
         }
 
+        // Enter level (K)
         if (Input.GetKeyDown(KeyCode.K))
         {
             if (currentNode != null)
             {
-                if (GameManager.Instance != null)
+                if (NodeMapManager.Instance.IsNodeUnlocked(currentNode.NodeId))
                 {
-                    GameManager.Instance.currentNode = currentNode;
-                    SceneManager.LoadScene(currentNode.GetLevelName());
+                    if (GameManager.Instance != null)
+                    {
+                        GameManager.Instance.currentNode = currentNode;
+                        SceneManager.LoadScene(currentNode.GetLevelName());
+                    }
+                    else
+                    {
+                        Debug.LogError("GameManager instance is null! Make sure GameManager exists in the scene.");
+                    }
                 }
                 else
                 {
-                    Debug.LogError("GameManager instance is null! Make sure GameManager exists in the scene.");
+                    Debug.Log("Current node is locked! Cannot enter level.");
                 }
             }
             else

@@ -234,7 +234,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!224 &650178987862076700
 RectTransform:
   m_ObjectHideFlags: 0
@@ -677,10 +677,9 @@ MonoBehaviour:
   menuWin: {fileID: 8139524574896554282}
   menuLose: {fileID: 2215327100303099993}
   gameplayMusic: {fileID: 3616788366902642047}
-  pauseMenuMusic: {fileID: 1548127586336260285, guid: 0bd0b4300e4400f4b80be28f00ebf725, type: 3}
-  audioFadeDuration: 0.5
+  pauseMenuMusic: {fileID: 8300000, guid: ba1fd0af7311cc74a8d356d63e221274, type: 3}
+  returnMenuMusic: {fileID: 8300000, guid: 0546d817ad9264d409b7ce6b28e56951, type: 3}
   isGameOver: 0
-  endOfLevel: 0
 --- !u!114 &1994164685577000207
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2877,7 +2876,7 @@ Transform:
   m_GameObject: {fileID: 5264852038726910015}
   serializedVersion: 2
   m_LocalRotation: {x: 0.25340116, y: -0.0000001321764, z: 0.00000003462373, w: 0.96736133}
-  m_LocalPosition: {x: -952.2802, y: -532.25, z: -4.6725683}
+  m_LocalPosition: {x: -959.94, y: -534.65, z: -4.32}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -4136,7 +4135,7 @@ MonoBehaviour:
       m_Calls:
       - m_Target: {fileID: 1490547816004475512}
         m_TargetAssemblyTypeName: ButtonFunctions, Assembly-CSharp
-        m_MethodName: BackToMenu
+        m_MethodName: LevelSelect
         m_Mode: 1
         m_Arguments:
           m_ObjectArgument: {fileID: 0}
@@ -4767,6 +4766,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 3616059359771812630}
     m_Modifications:
+    - target: {fileID: 3001934010657040855, guid: 484338184b418a04a894a89beeb74614, type: 3}
+      propertyPath: m_Enabled
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 3001934010657040855, guid: 484338184b418a04a894a89beeb74614, type: 3}
       propertyPath: OutputAudioMixerGroup
       value: 
