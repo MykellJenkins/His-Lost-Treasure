@@ -20,7 +20,7 @@ public class ButtonFunctions : MonoBehaviour
     public void Restart()
     {
         ResetSceneState();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().name);
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
     public void BackToMenu()

@@ -90373,7 +90373,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3706079484349776577, guid: d298a5207c7d5704d84d3dd2e54f4283, type: 3}
       propertyPath: m_OnClick.m_PersistentCalls.m_Calls.Array.data[0].m_MethodName
-      value: LevelSelect
+      value: BackToMenu
       objectReference: {fileID: 0}
     - target: {fileID: 5103992988965957474, guid: d298a5207c7d5704d84d3dd2e54f4283, type: 3}
       propertyPath: player
