@@ -134580,6 +134580,10 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 6505802101703679597, guid: 48fbaf2086267bd47b2e89302d114f54, type: 3}
+      propertyPath: checkpointSound
+      value: 
+      objectReference: {fileID: 1334441934}
     - target: {fileID: 8614584230953393186, guid: 48fbaf2086267bd47b2e89302d114f54, type: 3}
       propertyPath: m_Name
       value: Star_Checkpoint (1)
@@ -134618,7 +134622,7 @@ AudioSource:
   m_audioClip: {fileID: 0}
   m_Resource: {fileID: 8300000, guid: 7478151cf36724a7dada558f746c3633, type: 3}
   m_PlayOnAwake: 0
-  m_Volume: 0.8
+  m_Volume: 1
   m_Pitch: 1
   Loop: 0
   Mute: 0
@@ -134662,7 +134666,7 @@ AudioSource:
     m_Curve:
     - serializedVersion: 3
       time: 0
-      value: 1
+      value: 0
       inSlope: 0
       outSlope: 0
       tangentMode: 0
