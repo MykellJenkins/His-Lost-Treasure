@@ -6,6 +6,7 @@ public class RespawnManager : MonoBehaviour
 
     private Vector3 currentCheckPoint;
 
+    private bool hasCheckpoint = false;
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -16,27 +17,39 @@ public class RespawnManager : MonoBehaviour
     public void SetCheckPoint(Vector3 newCheckPoint)
     {
         currentCheckPoint = newCheckPoint;
+        hasCheckpoint = true;
+        Debug.Log("[CHECKPOINT SET] " + currentCheckPoint);
     }
 
     // Respawn the player at the current checkpoint
     public void RespawnPlayer(Player player)
     {
+        if (!hasCheckpoint)
+        {
+            Debug.LogWarning("Respawn attempted with no checkpoint set!");
+            return;
+        }
+
         if (player == null) return;
 
-        CharacterController controller = player.GetComponent<CharacterController>();
         Rigidbody rb = player.GetComponent<Rigidbody>();
+        if (rb == null) return;
 
-        // Disable physics to prevent collision issues
-        if (controller != null) controller.enabled = false;
-        if (rb != null) { rb.linearVelocity = Vector3.zero; rb.angularVelocity = Vector3.zero; }
+        // Stop physics
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+        rb.isKinematic = true; // temporarily disable physics
 
-        // Move player to checkpoint
-        player.transform.position = currentCheckPoint;
-
-        // Reset player state
+        // Reset player
         player.ResetPlayer();
 
+        // Teleport using Rigidbody
+        rb.position = currentCheckPoint;
+        rb.rotation = Quaternion.identity; // optional: reset rotation
+
         // Re-enable physics
-        if (controller != null) controller.enabled = true;
+        rb.isKinematic = false;
+
+        Debug.Log("Respawning at: " + currentCheckPoint);
     }
 }

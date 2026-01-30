@@ -1,5 +1,6 @@
 using System.Collections;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public enum PlayerState 
 { 
@@ -108,12 +109,6 @@ public class Player : MonoBehaviour, IDamage
         // 2. Load Global Settings (Volume/Sensitivity)
         LoadPlayerControls();
 
-        // 3. Load Save State
-        PlayerSaveData savedPlayer = SavePlayerData.Instance.LoadPlayer();
-        if (savedPlayer != null)
-        {
-            LoadFromSave(savedPlayer);
-        }
     }
 
     void Update()
@@ -122,6 +117,11 @@ public class Player : MonoBehaviour, IDamage
         ReadMovementInput();
         HandleStateTransitions();
         SmoothCrouchHeight();
+
+        if (invincibilityDuration > 0)
+        {
+            invincibilityDuration -= Time.deltaTime;
+        }
         //if (rb.linearVelocity == transform.up)
         //{
         //    isMovingUp = true;
@@ -146,6 +146,10 @@ public class Player : MonoBehaviour, IDamage
     // ?????????????????????????????????????????????
     void ReadMovementInput()
     {
+        // Check if we are on the NodeMap scene
+        if (SceneManager.GetActiveScene().name == "NodeMap")
+            return; // Exit early, no movement
+
         float horizontal = 0;
         float vertical = 0;
 
@@ -170,10 +174,9 @@ public class Player : MonoBehaviour, IDamage
         if (moveDirection.magnitude > 1f)
             moveDirection.Normalize();
 
-        // 4. (Optional) Rotate player to face move direction
+        // 4. Rotate player to face move direction
         if (moveDirection != Vector3.zero)
         {
-            // Smoothly rotate the player model to face where they are moving
             transform.forward = Vector3.Slerp(transform.forward, moveDirection, Time.deltaTime * 10f);
         }
     }
@@ -277,20 +280,17 @@ public class Player : MonoBehaviour, IDamage
             case PlayerState.Damage:
                 damageTimer -= Time.deltaTime;
 
-                if (damageTimer <= 0)
+                isHurt = false;
+                currentState = PlayerState.Idle;
+
+                // STOP FLASH ON EXIT
+                if (flashCoroutine != null)
                 {
-                    isHurt = false;
-                    currentState = PlayerState.Idle;
-
-                    // STOP FLASH ON EXIT
-                    if (flashCoroutine != null)
-                    {
-                        StopCoroutine(flashCoroutine);
-                        flashCoroutine = null;
-                    }
-
-                    SetRenderersVisible(true);
+                    StopCoroutine(flashCoroutine);
+                    flashCoroutine = null;
                 }
+
+                SetRenderersVisible(true);
                 break;
 
 
@@ -482,31 +482,37 @@ public class Player : MonoBehaviour, IDamage
 
     public void TakeDamage(int amount, Vector3 attackerPosition)
     {
-        if (isHurt == true) return;
+        // Prevent repeated damage during invincibility
+        if (invincibilityDuration > 0f) return;
 
-        if (invincibilityDuration <= 0)
-        {
-            maxLives -= amount;
-            isHurt = true;
-            currentState = PlayerState.Damage;
-            damageTimer = damageStunDuration;
-            invincibilityDuration = invincibilityTimeAfterDamage;
+        // Reduce health
+        maxLives -= amount;
+        Debug.Log($"Player took {amount} damage! Lives left: {maxLives}");
 
-            if (flashCoroutine != null)
-                StopCoroutine(flashCoroutine);
+        // Trigger damage state/effects
+        currentState = PlayerState.Damage;
+        isHurt = true;
+        invincibilityDuration = invincibilityTimeAfterDamage;
 
-            flashCoroutine = StartCoroutine(FlashRoutine());
-        }
+        if (flashCoroutine != null)
+            StopCoroutine(flashCoroutine);
+        flashCoroutine = StartCoroutine(FlashRoutine());
 
+        // Reset crouch height if needed
         if (targetHeight == crouchHeight)
-        {
             targetHeight = playerHeight;
+
+        // **RESPAWN AT CHECKPOINT**
+        if (RespawnManager.Instance != null)
+        {
+            Debug.Log("Respawning at last checkpoint!");
+            RespawnManager.Instance.RespawnPlayer(this);
         }
 
-
-        if (damageEffects != null)
+        // Optional: handle death
+        if (maxLives <= 0)
         {
-            damageEffects.ApplyKnockback(attackerPosition);
+            GameManager.Instance.StateLose();
         }
     }
 
@@ -514,7 +520,7 @@ public class Player : MonoBehaviour, IDamage
     {
         bool visible = true;
 
-        while (invincibilityDuration > 0)
+        while (damageTimer > 0)
         {
             visible = !visible;
             SetRenderersVisible(visible);
@@ -569,12 +575,10 @@ public class Player : MonoBehaviour, IDamage
 
         this.maxLives = data.maxLives;
 
-        // Convert SerializableVector3 back to Unity Vector3
-        // Use .ToVector3() helper from the struct created previously
+
         this.transform.position = data.position.ToVector3();
 
-        // Optional: Load rotation if you added it to PlayerSaveData
-        // this.transform.rotation = Quaternion.Euler(data.rotation.ToVector3());
+
     }
 
     void LoadPlayerControls()

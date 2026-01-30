@@ -44,6 +44,7 @@ public class MainMenu : MonoBehaviour
         {
             isInitializing = false; // Guaranteed to run even if an error occurs above
         }
+        Application.targetFrameRate = 30;
     }
 
     void LoadOrCreateData()
