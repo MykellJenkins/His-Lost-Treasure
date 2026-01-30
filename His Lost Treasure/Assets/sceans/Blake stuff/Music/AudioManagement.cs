@@ -47,6 +47,26 @@ public class AudioManagement : MonoBehaviour
         SwapTrack(defaultAmbience);
     }
 
+    public void PauseMusic()
+    {
+        if (track01.isPlaying) track01.Pause();
+        if (track02.isPlaying) track02.Pause();
+    }
+
+    public void ResumeMusic()
+    {
+        track01.UnPause();
+        track02.UnPause();
+    }
+
+
+
+
+
+
+
+
+
     private IEnumerator FadeTrack(AudioClip newClip)
     {
 
