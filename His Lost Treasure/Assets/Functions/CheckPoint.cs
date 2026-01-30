@@ -6,6 +6,15 @@ public class CheckPoint : MonoBehaviour
     [SerializeField] private float rotationSpeed = 90f;
     [SerializeField] private bool saveOnTrigger = true;
 
+    [Header("Audio")]
+    [SerializeField] private AudioSource checkpointSound;
+
+    private void Awake()
+    {
+        if (checkpointSound == null)
+            checkpointSound = GetComponent<AudioSource>();
+    }
+
     private bool isActivated = false;
     private void OnTriggerEnter(Collider other)
     {
@@ -14,6 +23,13 @@ public class CheckPoint : MonoBehaviour
             isActivated = true;
             if (other.CompareTag("Player"))
             {
+                // Play checkpoint sound
+                if (checkpointSound != null)
+                {
+                    checkpointSound.pitch = Random.Range(0.95f, 1.05f); // optional polish
+                    checkpointSound.Play();
+                }
+
                 // 1. Update the Respawn position in memory
                 GameManager.Instance.rmInstance.SetCheckPoint(transform.position);
 
@@ -27,10 +43,12 @@ public class CheckPoint : MonoBehaviour
                 // GetComponent<Renderer>().material.color = Color.green;
             }
         }
-        
+
     }
 
-    private void SaveProgress()
+ 
+
+private void SaveProgress()
     {
         // Capture current player state and write to JSON
         PlayerSaveData data = GameManager.Instance.playerScript.GetSaveData();
