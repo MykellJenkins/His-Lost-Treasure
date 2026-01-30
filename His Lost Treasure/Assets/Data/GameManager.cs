@@ -155,7 +155,7 @@ public class GameManager : MonoBehaviour
     {
         SetState(true);
         playerScript.enabled = false;
-        AudioManagement.instance.PauseMusic();
+        AudioManagement.instance.SwapTrack(pauseMenuMusic);
         //StartCoroutine(FadeAudio(gameplayMusic, pauseMenuMusic, audioFadeDuration));
         ShowMenu(menuPause);
     }
@@ -172,7 +172,7 @@ public class GameManager : MonoBehaviour
         }
 
         playerScript.enabled = true;
-        AudioManagement.instance.ResumeMusic();
+        AudioManagement.instance.SwapTrack(returnMenuMusic);
         //StartCoroutine(FadeAudio(pauseMenuMusic, gameplayMusic, audioFadeDuration));
         ShowMenu(null);
     }
