@@ -10,7 +10,6 @@ public class GameManager : MonoBehaviour
     public static GameManager Instance { get; private set; }
     private PlayerInputActions inputActions;
 
-
     [Header("Manager References")]
     public GameObject player;
     public Player playerScript;
@@ -51,12 +50,14 @@ public class GameManager : MonoBehaviour
         data = PlayerSaveSystem.Instance;
         inputActions = new PlayerInputActions();
 
+
         if (rmInstance == null)
             rmInstance = RespawnManager.Instance;
     }
 
     void Start()
     {
+
         Debug.Log("Keyboard detected: " + (Keyboard.current != null));
         PlayerSaveSystem.Instance.LoadPlayerProgress();
         StartCoroutine(InitializePlayerCoroutine());
@@ -115,11 +116,6 @@ public class GameManager : MonoBehaviour
     void Update()
     {
         // if (!playerReady) return;
-        if (Keyboard.current.pKey.wasPressedThisFrame)
-            Debug.Log("P detected raw input");
-
-        if (Keyboard.current.escapeKey.wasPressedThisFrame)
-            Debug.Log("Escape detected raw input");
 
         //HandleInput();
 
@@ -174,12 +170,10 @@ public class GameManager : MonoBehaviour
     //}
     private void OnPause(InputAction.CallbackContext context)
     {
-        Debug.Log("PAUSE ACTION FIRED");
-
-        if (isGameOver) return;
-
         if (!isPaused)
+        {
             StatePause();
+        }
         else
         {
             if (menuActive == menuSetting)
@@ -312,25 +306,17 @@ public class GameManager : MonoBehaviour
     }
     private void OnEnable()
     {
-        if (inputActions == null)
-            inputActions = new PlayerInputActions();
-
-        // Subscribe first, then enable
-        inputActions.UI.Pause.performed += OnPause;
-        inputActions.UI.Enable();
+        if (inputActions != null)
+            inputActions.UI.Pause.performed += OnPause;
+        inputActions?.Enable();
     }
 
     private void OnDisable()
     {
         if (inputActions != null)
-        {
             inputActions.UI.Pause.performed -= OnPause;
-            inputActions.UI.Disable();
-        }
+        inputActions?.Disable();
     }
-
-   
-
 }
 
 

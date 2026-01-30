@@ -5,30 +5,8 @@
         {
             "name": "Player",
             "id": "df70fa95-8a34-4494-b137-73ab6b9c7d37",
-            "actions": [
-                {
-                    "name": "New action",
-                    "type": "Button",
-                    "id": "97ebd1d8-a155-4f57-8667-9e7158c5bf54",
-                    "expectedControlType": "",
-                    "processors": "",
-                    "interactions": "",
-                    "initialStateCheck": false
-                }
-            ],
-            "bindings": [
-                {
-                    "name": "",
-                    "id": "9211eb40-28ef-4d2f-911f-64eb1bbdb657",
-                    "path": "",
-                    "interactions": "",
-                    "processors": "",
-                    "groups": "",
-                    "action": "New action",
-                    "isComposite": false,
-                    "isPartOfComposite": false
-                }
-            ]
+            "actions": [],
+            "bindings": []
         },
         {
             "name": "UI",
@@ -37,7 +15,7 @@
                 {
                     "name": "Pause",
                     "type": "Button",
-                    "id": "c9d58855-5048-4220-b93e-f82195eeb574",
+                    "id": "c502e308-cd22-42a8-8bd8-5ca3727b4b55",
                     "expectedControlType": "",
                     "processors": "",
                     "interactions": "",
@@ -47,7 +25,7 @@
             "bindings": [
                 {
                     "name": "",
-                    "id": "b88817e5-8c96-448a-9f67-1e8fc917ccfb",
+                    "id": "7606af20-6b4c-4d89-9434-5a2e96e09d99",
                     "path": "<Keyboard>/p",
                     "interactions": "",
                     "processors": "",
@@ -58,7 +36,7 @@
                 },
                 {
                     "name": "",
-                    "id": "e5ed6b7d-f6cc-4ed8-8984-e6a586a035f4",
+                    "id": "4e0220e2-c68a-4099-8a30-ae8038f2ad2c",
                     "path": "<Keyboard>/escape",
                     "interactions": "",
                     "processors": "",
