@@ -4,7 +4,18 @@ using System.Threading.Tasks;
 
 public class PlayerSaveSystem : MonoBehaviour
 {
+    public static PlayerSaveSystem Instance { get; private set; }
     private Player player;
+
+    void Awake()
+    {
+        if (Instance != null && Instance != this)
+        {
+            Destroy(gameObject);
+            return;
+        }
+        Instance = this;
+    }
 
     async void Start()
     {
@@ -20,14 +31,22 @@ public class PlayerSaveSystem : MonoBehaviour
 
     async Task FindPlayerAsync()
     {
-        while (player == null)
+        int attempts = 0;
+        while (player == null && attempts < 300) // ~5 seconds at 60fps
         {
             GameObject playerGO = GameObject.FindWithTag("Player");
             if (playerGO != null)
+            {
                 player = playerGO.GetComponent<Player>();
+                break;
+            }
 
             await Task.Yield();
+            attempts++;
         }
+
+        if (player == null)
+            Debug.LogWarning("Player not found after waiting! Check scene setup.");
     }
 
     public void SavePlayerProgress()
@@ -44,25 +63,21 @@ public class PlayerSaveSystem : MonoBehaviour
         SavePlayerData.Instance.SavePlayer(data);
     }
 
-    public async void LoadPlayerProgress()
+    public async void LoadPlayerProgress(bool forceSceneLoad = false)
     {
         PlayerSaveData data = SavePlayerData.Instance.LoadPlayer();
         if (data == null) return;
 
         int currentBuildIndex = SceneManager.GetActiveScene().buildIndex;
 
-        // Only load the scene if we are NOT currently in it.
-        // IMPORTANT: Ensure your Main Menu or Launcher is the one calling this, 
-        // not a script that exists inside the level itself.
-        if (data.currentLevel != currentBuildIndex)
+        // Only load the scene if forced (from main menu) AND it's a different scene
+        if (forceSceneLoad && data.currentLevel != currentBuildIndex)
         {
-            // If this script is on a GameObject that persists (DontDestroyOnLoad), 
-            // this is okay. If not, this script is destroyed mid-execution.
             await SceneManager.LoadSceneAsync(data.currentLevel);
             return;
         }
 
-        // If we are already in the right scene, just apply the stats
+        // If we are already in the scene, or loading is not forced, just apply stats
         await FindPlayerAsync();
         ApplyPlayerData(data);
     }

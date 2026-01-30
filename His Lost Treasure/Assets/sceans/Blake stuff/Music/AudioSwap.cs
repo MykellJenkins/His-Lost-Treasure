@@ -18,7 +18,7 @@ public class AudioSwap : MonoBehaviour
     {
         if (other.CompareTag("Player"))
         {
-            AudioManagement.instance.ReturntoDefault();
+            //AudioManagement.instance.ReturntoDefault();
         }
     }
 
