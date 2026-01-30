@@ -175,8 +175,18 @@ public class GameManager : MonoBehaviour
     private void OnPause(InputAction.CallbackContext context)
     {
         Debug.Log("PAUSE ACTION FIRED");
-        if (!isPaused) StatePause();
-        else StateUnpause();
+
+        if (isGameOver) return;
+
+        if (!isPaused)
+            StatePause();
+        else
+        {
+            if (menuActive == menuSetting)
+                StateBackToPause();
+            else
+                StateUnpause();
+        }
     }
 
     // ---------------- GAME STATES ----------------
@@ -305,18 +315,21 @@ public class GameManager : MonoBehaviour
         if (inputActions == null)
             inputActions = new PlayerInputActions();
 
-        // Enable only the UI action map
-        inputActions.UI.Enable();
-
-        // Subscribe to the pause event
+        // Subscribe first, then enable
         inputActions.UI.Pause.performed += OnPause;
+        inputActions.UI.Enable();
     }
 
     private void OnDisable()
     {
-        inputActions.UI.Pause.performed -= OnPause;
-        inputActions.UI.Disable();
+        if (inputActions != null)
+        {
+            inputActions.UI.Pause.performed -= OnPause;
+            inputActions.UI.Disable();
+        }
     }
+
+   
 
 }
 
