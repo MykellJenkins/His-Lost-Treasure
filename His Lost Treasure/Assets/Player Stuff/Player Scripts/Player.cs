@@ -279,19 +279,31 @@ public class Player : MonoBehaviour, IDamage
         {
 
             case PlayerState.Idle:
+
+                // ENTER Run when player starts moving
+                if (moveDirection.magnitude > 0.1f && isGrounded)
+                {
+                    currentState = PlayerState.Run;
+                    break;
+                }
+
                 if (isGrounded && crouchBufferCounter > 0)
                 {
                     crouchBufferCounter = 0;
                     currentState = PlayerState.Crouch;
                     EnterCrouch();
+                    break;
                 }
 
                 if (isGrounded && crouchHeld)
                 {
                     currentState = PlayerState.Crouch;
                     EnterCrouch();
+                    break;
                 }
-                if (isHurt == true) currentState = PlayerState.Damage;
+
+                if (isHurt)
+                    currentState = PlayerState.Damage;
 
                 break;
 
@@ -383,19 +395,22 @@ public class Player : MonoBehaviour, IDamage
             break;
 
             case PlayerState.Damage:
-                damageTimer -= Time.deltaTime;
+                while (invincibilityDuration > 0f)
+                    damageTimer -= Time.deltaTime;
 
-                isHurt = false;
-                currentState = PlayerState.Idle;
-
-                // STOP FLASH ON EXIT
-                if (flashCoroutine != null)
+                if (damageTimer <= 0f)
                 {
-                    StopCoroutine(flashCoroutine);
-                    flashCoroutine = null;
-                }
+                    isHurt = false;
+                    currentState = PlayerState.Idle;
 
-                SetRenderersVisible(true);
+                    if (flashCoroutine != null)
+                    {
+                        StopCoroutine(flashCoroutine);
+                        flashCoroutine = null;
+                    }
+
+                    SetRenderersVisible(true);
+                }
                 break;
 
 
@@ -653,6 +668,7 @@ public class Player : MonoBehaviour, IDamage
 
     public void TakeDamage(int amount, Vector3 attackerPosition)
     {
+        damageTimer = damageStunDuration;
         // Prevent repeated damage during invincibility
         if (invincibilityDuration > 0f) return;
 
