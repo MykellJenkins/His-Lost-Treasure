@@ -1,15 +1,15 @@
-using UnityEngine;
-using UnityEngine.SceneManagement;
-using System.IO;
 using System.Collections;
+using System.IO;
 using Unity.VisualScripting;
+using UnityEngine;
+using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class ButtonFunctions : MonoBehaviour
 {
     private void ResetSceneState()
     {
         Time.timeScale = 1f;
-        if (GameManager.Instance != null) GameManager.Instance.StateUnpause();
 
         Cursor.visible = true;
         Cursor.lockState = CursorLockMode.None;
@@ -19,8 +19,8 @@ public class ButtonFunctions : MonoBehaviour
 
     public void Restart()
     {
-        ResetSceneState();
-        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+        if (GameManager.Instance != null)
+            GameManager.Instance.RestartLevel();
     }
 
     public void BackToMenu()
