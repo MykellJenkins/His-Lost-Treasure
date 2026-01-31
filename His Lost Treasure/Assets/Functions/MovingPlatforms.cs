@@ -1,8 +1,10 @@
 using UnityEngine;
 using System.Collections;
 
+
 public class MovingPlatforms : MonoBehaviour
 {
+    [SerializeField] Rigidbody rb;
     [SerializeField] Transform start;
     [SerializeField] Transform end;
     [SerializeField] float speed;
@@ -15,17 +17,18 @@ public class MovingPlatforms : MonoBehaviour
     // Start is called once before the first execution of Update after the MonoBehaviour is created
     void Start()
     {
+        rb = GetComponent<Rigidbody>();
         target = end.position;
     }
 
     // Update is called once per frame
-    void Update()
+    void FixedUpdate()
     {
         if (stopped) return;
 
-        transform.position = Vector3.MoveTowards(transform.position, target, speed * Time.deltaTime);
+        rb.MovePosition(Vector3.MoveTowards(rb.position, target, Time.fixedDeltaTime * speed));
 
-        if (Vector3.Distance(transform.position, target) < 0.01f)
+        if (Vector3.Distance(rb.position, target) < 0.01f)
         {
             StartCoroutine(SwapTarget());
         }
@@ -38,20 +41,5 @@ public class MovingPlatforms : MonoBehaviour
         target = target == start.position ? end.position : start.position;
         stopped = false;
     }
-    private void OnCollisionEnter(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            collision.transform.SetParent(transform);
-
-        }
-    }
-    private void OnCollisionExit(Collision collision)
-    {
-        if (collision.gameObject.CompareTag("Player"))
-        {
-            collision.transform.SetParent(null);
-
-        }
-    }
+  
 }
