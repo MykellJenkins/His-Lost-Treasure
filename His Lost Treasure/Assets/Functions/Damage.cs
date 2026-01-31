@@ -15,7 +15,6 @@ public class Damage : MonoBehaviour
     [SerializeField] int destroyTime;
 
     bool isDamaging;
-
     void Start()
     {
         if (type == damageType.moving || type == damageType.homing)
@@ -35,24 +34,13 @@ public class Damage : MonoBehaviour
 
     private void OnTriggerEnter(Collider other)
     {
+        Debug.Log("[Damage Trigger] Collided with: " + other.name);
+
         if (other.isTrigger) return;
-
         IDamage dmg = other.GetComponent<IDamage>();
-
-       
-
-        if (dmg != null && type != damageType.DOT&& type!= damageType.crushing)
+        if (dmg != null)
         {
-            // PASS transform.position so knockback knows the direction
-            dmg.TakeDamage(damageAmount, transform.position);
-        }
-
-        if (type == damageType.homing || type == damageType.moving)
-        {
-            Destroy(gameObject);
-        }
-        if (dmg != null && type == damageType.crushing && crush.GetIsMovingDown() /*&& !player.GetIsMovingUp()*/)
-        {
+            Debug.Log("[Damage Trigger] Player hit! Taking damage");
             dmg.TakeDamage(damageAmount, transform.position);
         }
     }

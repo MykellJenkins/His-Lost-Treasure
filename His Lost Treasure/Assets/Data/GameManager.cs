@@ -1,13 +1,17 @@
 using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using Unity.Cinemachine;
+using UnityEngine.InputSystem;
 
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+    private PlayerInputActions inputActions;
 
     [Header("Manager References")]
+    public GameObject player;
     public Player playerScript;
     //public PlayerSaveSystem playersave;
     public Node currentNode;
@@ -22,34 +26,45 @@ public class GameManager : MonoBehaviour
 
     [Header("Audio")]
     [SerializeField] AudioSource gameplayMusic;
-    [SerializeField] AudioSource pauseMenuMusic;
-    [SerializeField] float audioFadeDuration = 0.5f;
+    [SerializeField] AudioClip pauseMenuMusic;
+    [SerializeField] AudioClip returnMenuMusic;
+    //[SerializeField] float audioFadeDuration = 0.5f;
 
     private PlayerSaveSystem data;
     public bool isPaused { get; private set; }
     public bool isGameOver = false;
-    public bool endOfLevel = false;
+    //public bool endOfLevel = false;
 
-    private bool playerReady = false;
+    //private bool playerReady = false;
 
     void Awake()
     {
         if (Instance != null && Instance != this)
         {
+            Destroy(gameObject);
             return;
         }
+
         Instance = this;
 
-        // Assign RespawnManager singleton if not set
-        if (rmInstance == null) rmInstance = RespawnManager.Instance;
+        data = PlayerSaveSystem.Instance;
+        inputActions = new PlayerInputActions();
+
+
+        if (rmInstance == null)
+            rmInstance = RespawnManager.Instance;
     }
 
     void Start()
     {
+
+        Debug.Log("Keyboard detected: " + (Keyboard.current != null));
+        PlayerSaveSystem.Instance.LoadPlayerProgress();
         StartCoroutine(InitializePlayerCoroutine());
         Time.timeScale = 1f;
-
+        Application.targetFrameRate = 30;
         if (gameplayMusic != null) gameplayMusic.Play();
+        SetState(false);
     }
 
     // ---------------- INITIALIZATION ----------------
@@ -58,8 +73,8 @@ public class GameManager : MonoBehaviour
         yield return null; // Wait one frame for all objects to initialize
 
         // Find player in scene
-        if (playerScript == null)
-            playerScript = FindFirstObjectByType<Player>();
+        //if (playerScript == null)
+        //    playerScript = FindFirstObjectByType<Player>();
 
         if (playerScript == null)
         {
@@ -94,15 +109,15 @@ public class GameManager : MonoBehaviour
             if (controller != null) controller.enabled = true;
         }
 
-        playerReady = true;
+        //playerReady = true;
     }
 
     // ---------------- UPDATE ----------------
     void Update()
     {
-        if (!playerReady) return;
+        // if (!playerReady) return;
 
-        HandleInput();
+        //HandleInput();
 
         if (isPaused || isGameOver) return;
 
@@ -121,78 +136,136 @@ public class GameManager : MonoBehaviour
             }
         }
 
-        if (endOfLevel && !isGameOver)
-        {
-            StateWin();
-            endOfLevel = false;
-        }
+        //if (endOfLevel == true && isGameOver == false)
+        //{
+        //    StateWin();
+        //    endOfLevel = false;
+        //}
     }
 
     // ---------------- INPUT ----------------
-    private void HandleInput()
+    //private void HandleInput()
+    //{
+    //    if (Input.anyKeyDown)
+    //        Debug.Log("Key pressed");
+
+    //    if (Input.GetKeyDown(KeyCode.P))
+    //        Debug.Log("P pressed");
+
+    //    if (Input.GetKeyDown(KeyCode.P))
+    //    {
+    //        if (!isPaused)
+    //        {
+    //            StatePause();
+    //        }
+    //        else
+    //        {
+    //            // If paused, always unpause unless in settings
+    //            if (menuActive == menuSetting)
+    //                StateBackToPause();
+    //            else
+    //                StateUnpause();
+    //        }
+    //    }
+    //}
+    private void OnPause(InputAction.CallbackContext context)
     {
-        if (Input.GetKeyDown(KeyCode.P))
+        if (!isPaused)
         {
-            if (!isPaused) StatePause();
-            else if (menuActive == menuPause) StateUnpause();
-            else if (menuActive == menuSetting) StateBackToPause();
+            StatePause();
+        }
+        else
+        {
+            if (menuActive == menuSetting)
+                StateBackToPause();
+            else
+                StateUnpause();
         }
     }
 
     // ---------------- GAME STATES ----------------
     public void StatePause()
     {
+        if (isGameOver) return;
+        Debug.Log("Paused state BEFORE: " + isPaused);
         SetState(true);
-        StartCoroutine(FadeAudio(gameplayMusic, pauseMenuMusic, audioFadeDuration));
+        playerScript.enabled = false;
+        AudioManagement.instance.SwapTrack(pauseMenuMusic);
         ShowMenu(menuPause);
     }
 
     public void StateUnpause()
     {
         SetState(false);
-        StartCoroutine(FadeAudio(pauseMenuMusic, gameplayMusic, audioFadeDuration));
+
+        if (playerScript != null)
+            playerScript.enabled = true;
+
+        Rigidbody rb = playerScript.GetComponent<Rigidbody>();
+        if (rb != null)
+        {
+            rb.linearVelocity = Vector3.zero;
+            rb.angularVelocity = Vector3.zero;
+        }
+
+        AudioManagement.instance.SwapTrack(returnMenuMusic);
         ShowMenu(null);
     }
 
     public void StateWin()
     {
+        Debug.Log("STATE WIN ENTERED");
         if (isGameOver) return;
         isGameOver = true;
-        
-        SetState(true);
-        gameplayMusic.Stop();
-        pauseMenuMusic.Stop();
 
-        // Unlock next node
+        SetState(true);
+        ShowMenu(menuWin);
         currentNode?.CompleteLevel();
 
-        data.SavePlayerProgress();
-        // Save progress: current node is this one
+        // Get the PlayerSaveSystem instance when saving
+        if (PlayerSaveSystem.Instance != null)
+        {
+            PlayerSaveSystem.Instance.SavePlayerProgress();
+        }
+        else
+        {
+            Debug.LogError("PlayerSaveSystem instance is null! Cannot save progress.");
+        }
+
         ProgressSaveData datap = SavePlayerData.Instance.LoadProgress() ?? new ProgressSaveData();
         datap.currentNodeId = currentNode?.NodeId;
         SavePlayerData.Instance.SaveProgress(datap);
-        
-        ShowMenu(menuWin);
     }
 
     public void StateLose()
     {
+        Debug.Log("StateLose called");
         if (isGameOver) return;
         isGameOver = true;
-        data.SavePlayerProgress();
-        SetState(true);
-        gameplayMusic?.Stop();
-        pauseMenuMusic?.Stop();
 
+        Debug.Log("Setting state true");
+        SetState(true);
+
+        if (menuLose == null) Debug.LogError("menuLose not assigned!");
+
+        Debug.Log("Showing Lose Menu");
         ShowMenu(menuLose);
+
+        // Get the PlayerSaveSystem instance when saving
+        if (PlayerSaveSystem.Instance != null)
+        {
+            PlayerSaveSystem.Instance.SavePlayerProgress();
+        }
+        else
+        {
+            Debug.LogError("PlayerSaveSystem instance is null! Cannot save progress.");
+        }
     }
 
     // ---------------- HELPERS ----------------
     private void SetState(bool paused)
     {
         isPaused = paused;
-        //if (paused)
-        data.SavePlayerProgress();
         Time.timeScale = paused ? 0f : 1f;
         Cursor.visible = paused;
         Cursor.lockState = paused ? CursorLockMode.None : CursorLockMode.Locked;
@@ -200,6 +273,7 @@ public class GameManager : MonoBehaviour
 
     private void ShowMenu(GameObject menu)
     {
+        Debug.Log("ShowMenu called with: " + (menu != null ? menu.name : "NULL"));
         if (menuActive != null) menuActive.SetActive(false);
         menuActive = menu;
         if (menuActive != null) menuActive.SetActive(true);
@@ -221,6 +295,27 @@ public class GameManager : MonoBehaviour
             yield return null;
         }
         from?.Pause();
+    }
+
+    public void TriggerWin()
+    {
+        Debug.Log("TriggerWin called");
+
+        if (isGameOver) return;
+        StateWin();
+    }
+    private void OnEnable()
+    {
+        if (inputActions != null)
+            inputActions.UI.Pause.performed += OnPause;
+        inputActions?.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (inputActions != null)
+            inputActions.UI.Pause.performed -= OnPause;
+        inputActions?.Disable();
     }
 }
 
