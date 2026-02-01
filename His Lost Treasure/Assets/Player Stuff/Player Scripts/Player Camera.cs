@@ -1,29 +1,53 @@
 using UnityEngine;
+using UnityEngine.InputSystem;
 
 public class PlayerCamera : MonoBehaviour
 {
-    void Start()
-    {
-        // Lock the cursor to the center of the screen
-        Cursor.lockState = CursorLockMode.Locked;
+    private PlayerInputActions inputActions;
 
-        // Hide the cursor
+    private void Awake()
+    {
+        inputActions = new PlayerInputActions();
+    }
+
+    private void OnEnable()
+    {
+        inputActions.UI.ToggleMouseLock.started += OnCursorPressed;
+        inputActions.UI.ToggleMouseLock.canceled += OnCursorReleased;
+        inputActions.UI.Enable();
+    }
+
+    private void OnDisable()
+    {
+        inputActions.UI.ToggleMouseLock.started -= OnCursorPressed;
+        inputActions.UI.ToggleMouseLock.canceled -= OnCursorReleased;
+        inputActions.UI.Disable();
+    }
+
+    private void Start()
+    {
+        LockCursor();
+    }
+
+    private void OnCursorPressed(InputAction.CallbackContext context)
+    {
+        UnlockCursor();
+    }
+
+    private void OnCursorReleased(InputAction.CallbackContext context)
+    {
+        LockCursor();
+    }
+
+    private void LockCursor()
+    {
+        Cursor.lockState = CursorLockMode.Locked;
         Cursor.visible = false;
     }
 
-    void Update()
+    private void UnlockCursor()
     {
-        // Unlock and show the cursor when Escape is pressed
-        if (Input.GetKeyDown(KeyCode.Escape))
-        {
-            Cursor.lockState = CursorLockMode.None;
-            Cursor.visible = true;
-        }
-
-        if (Input.GetKeyUp(KeyCode.Escape))
-        {
-            Cursor.lockState = CursorLockMode.Locked;
-            Cursor.visible = false;
-        }
+        Cursor.lockState = CursorLockMode.None;
+        Cursor.visible = true;
     }
 }
