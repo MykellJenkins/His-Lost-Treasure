@@ -45,6 +45,11 @@ public class Player : MonoBehaviour, IDamage
     public KeyCode leftKey = KeyCode.A;
     public KeyCode backKey = KeyCode.S;
     public KeyCode rightKey = KeyCode.D;
+    Vector3 currentVelocity;
+    Vector3 velocityChange;
+    Vector3 desiredVelocity;
+    Vector3 horizontalvelocity;
+    Vector3 verticalvelocity;
 
     // Sprinting
     public float SprintSpeed = 6f;
@@ -70,12 +75,17 @@ public class Player : MonoBehaviour, IDamage
     public float slideMinSpeed = 4f;
 
     //Ground & Ceiling
+    public LayerMask ignoreLayer;
     public LayerMask groundLayer;
     public LayerMask ceilingMask;
     public float ceilingCheckDistance = 0.1f;
     private bool isGrounded;
     private float playerHeight;
     private float targetHeight;
+
+    //movingplatform 
+    Rigidbody movingPlatformRB;
+
 
     //damage flash
     public float flashInterval = 0.1f;
@@ -137,6 +147,7 @@ public class Player : MonoBehaviour, IDamage
     {
         ApplyStateMovement();
         ApplyJumpPhysics();
+       
     }
 
 
@@ -317,7 +328,7 @@ public class Player : MonoBehaviour, IDamage
                 break;
 
             case PlayerState.Jump:
-                MoveNormally();
+                Move(moveSpeed);
                 break;
 
             case PlayerState.Crouch:
@@ -339,31 +350,20 @@ public class Player : MonoBehaviour, IDamage
     // ?????????????????????????????????????????????
     void Move(float speed)
     {
-        Vector3 desiredVelocity = moveDirection * speed;
-        Vector3 currentVelocity = rb.linearVelocity;
-        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+        horizontalvelocity = Vector3.zero;
+        if (isGrounded && movingPlatformRB != null)
+        {
+            horizontalvelocity = new Vector3(movingPlatformRB.linearVelocity.x, 0, movingPlatformRB.linearVelocity.z);
+        }
+        
+        desiredVelocity = moveDirection * speed + horizontalvelocity;
+        currentVelocity = rb.linearVelocity;
+        
+        velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
         rb.AddForce(velocityChange, ForceMode.VelocityChange);
 
     }
-    void MoveNormally()
-    {
-
-        if (IsSprinting == true)
-        {
-            Vector3 desiredVelocity = moveDirection * moveSpeed;
-            Vector3 currentVelocity = rb.linearVelocity;
-            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-            rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        }
-        else
-        {
-            Vector3 desiredVelocity = moveDirection * moveSpeed;
-            Vector3 currentVelocity = rb.linearVelocity;
-            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-            rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        }
-
-    }
+   
 
     void Jump()
     {
@@ -455,25 +455,43 @@ public class Player : MonoBehaviour, IDamage
     void CheckGround()
     {
         Vector3 origin = transform.position + Vector3.up * 0.1f;
-        isGrounded = Physics.Raycast(origin, Vector3.down, playerHeight / 2 + 0.2f, groundLayer);
 
-        if (isGrounded && rb.linearVelocity.y <= 0.1f)
+        RaycastHit hit;
+
+        if (Physics.Raycast(origin, Vector3.down, out hit, playerHeight / 2 + 0.2f, groundLayer))
         {
-            jumpLeft = jumps; // Reset jumps when we touch the floor
+            isGrounded = true;
+            jumpLeft = jumps;
+            if (hit.collider.CompareTag("MovingPlatform"))
+            {
+                movingPlatformRB = hit.rigidbody;
+                
+            }
+            else
+            {
+                movingPlatformRB = null;
+
+            }
+        }
+        else
+        {
+            isGrounded = false;
+            movingPlatformRB = null;
         }
     }
+       
 
     void ApplyCrouchMovement()
     {
-        // Keep existing momentum
-        Vector3 currentVelocity = rb.linearVelocity;
-        // Optional: allow slow steering while crouched
-        Vector3 steer = moveDirection * (moveSpeed * 0.15f);
-        // 30% steering
-        Vector3 newVelocity = new Vector3(
-            currentVelocity.x + (steer.x * Time.fixedDeltaTime),
-            currentVelocity.y,
-            currentVelocity.z + (steer.z * Time.fixedDeltaTime)
+            // Keep existing momentum
+            currentVelocity = rb.linearVelocity;
+            // Optional: allow slow steering while crouched
+            Vector3 steer = moveDirection * (moveSpeed * 0.15f);
+            // 30% steering
+            Vector3 newVelocity = new Vector3(
+                currentVelocity.x + (steer.x * Time.fixedDeltaTime),
+                currentVelocity.y,
+                currentVelocity.z + (steer.z * Time.fixedDeltaTime)
         );
 
         rb.linearVelocity = newVelocity;
