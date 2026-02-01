@@ -45,7 +45,6 @@ public class Player : MonoBehaviour, IDamage
     // cached inputs
     private Vector2 moveInput;
     private Vector2 lookInput;
-    private bool jumpPressed;
     private bool sprintHeld;
     private bool crouchHeld;
 
@@ -59,7 +58,6 @@ public class Player : MonoBehaviour, IDamage
 
     // Sprinting
     public float SprintSpeed = 6f;
-    bool IsSprinting;
 
     // Jumping
     public float jumpForce = 10f;
@@ -145,7 +143,6 @@ public class Player : MonoBehaviour, IDamage
 
         inputActions.Player.Jump.performed += _ => 
         {
-            jumpPressed = true;
             jumpBufferCounter = jumpBufferTime;
         };
 
@@ -446,12 +443,10 @@ public class Player : MonoBehaviour, IDamage
             case PlayerState.Idle:
             case PlayerState.Run:
                 Move(moveSpeed); // Pass the speed as a parameter
-                IsSprinting = false;
             break;
 
             case PlayerState.Sprint:
                 Move(SprintSpeed);
-                IsSprinting = true;
             break;
 
             case PlayerState.Jump:
