@@ -247,7 +247,7 @@ Transform:
   m_GameObject: {fileID: 3339361588730578547}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 7.9855385, y: 3.98, z: 0.62}
+  m_LocalPosition: {x: 8, y: 3.98, z: 0.62}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -301,7 +301,7 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 3339361588730578547}
-  m_Enabled: 1
+  m_Enabled: 0
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8ec22535002ebda4b8a6ef52ad05e804, type: 3}
   m_Name: 
@@ -320,19 +320,19 @@ MonoBehaviour:
   backKey: 115
   rightKey: 100
   SprintSpeed: 10
-  RunKey: 304
   jumpForce: 10
   jumpLeft: 1
   jumps: 1
   fallMultiplier: 2.5
   ascendMultiplier: 2
-  jumpKey: 32
   crouchHeight: 1
   crouchSpeed: 5
-  crouchKey: 306
   slideSpeed: 15
   slideDuration: 0.5
   slideMinSpeed: 4
+  ignoreLayer:
+    serializedVersion: 2
+    m_Bits: 0
   groundLayer:
     serializedVersion: 2
     m_Bits: 24577
@@ -341,6 +341,17 @@ MonoBehaviour:
     m_Bits: 16641
   ceilingCheckDistance: 0.1
   flashInterval: 0.1
+  jumpBufferTime: 0.15
+  coyoteTime: 0.12
+  crouchBufferTime: 0.15
+  slopeForce: 25
+  uphillDrag: 20
+  slideGravity: 30
+  maxSlideSpeed: 20
+  groundStickForce: 10
+  slideExitBoost: 1.05
+  maxCarrySpeed: 10
+  momentumDecay: 6
 --- !u!33 &7403530034870996860
 MeshFilter:
   m_ObjectHideFlags: 0

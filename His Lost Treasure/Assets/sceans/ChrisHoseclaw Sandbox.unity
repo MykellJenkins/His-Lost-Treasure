@@ -237,7 +237,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!82 &38995917
 AudioSource:
   m_ObjectHideFlags: 0
@@ -7241,9 +7241,8 @@ MonoBehaviour:
   menuLose: {fileID: 1298417756509383209}
   gameplayMusic: {fileID: 38995917}
   pauseMenuMusic: {fileID: 38995917}
-  audioFadeDuration: 0.5
+  returnMenuMusic: {fileID: 0}
   isGameOver: 0
-  endOfLevel: 0
 --- !u!1 &5376865399114144340
 GameObject:
   m_ObjectHideFlags: 0
