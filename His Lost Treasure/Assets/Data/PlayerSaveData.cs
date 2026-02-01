@@ -8,6 +8,15 @@ public class PlayerSaveData
     public SerializableVector3 feetPosition;
     public int currentLevel;
 
+    // REQUIRED for LoadData<T>()
+    public PlayerSaveData()
+    {
+        maxLives = 3;
+        feetPosition = new SerializableVector3(Vector3.zero);
+        currentLevel = 0;
+    }
+
+    // Used when SAVING
     public PlayerSaveData(int lives, Vector3 feetPos, int level)
     {
         maxLives = lives;
