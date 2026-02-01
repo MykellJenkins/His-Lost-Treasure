@@ -650,7 +650,8 @@ public class Player : MonoBehaviour, IDamage
         if (Physics.Raycast(origin, Vector3.down, out hit, playerHeight / 2 + 0.2f, groundLayer))
         {
             isGrounded = true;
-            jumpLeft = jumps;
+           coyoteCounter = coyoteTime; // Reset coyote time when grounded
+            jumpLeft = jumps; // Reset jumps when we touch the floor
             if (hit.collider.CompareTag("MovingPlatform"))
             {
                 movingPlatformRB = hit.rigidbody;
@@ -664,8 +665,7 @@ public class Player : MonoBehaviour, IDamage
         }
         else
         {
-            coyoteCounter = coyoteTime; // Reset coyote time when grounded
-            jumpLeft = jumps; // Reset jumps when we touch the floor
+            
             isGrounded = false;
             movingPlatformRB = null;
         }
