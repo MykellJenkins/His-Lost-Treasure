@@ -63,7 +63,7 @@ public class GameManager : MonoBehaviour
         StartCoroutine(InitializePlayerCoroutine());
         Time.timeScale = 1f;
         Application.targetFrameRate = 30;
-        if (gameplayMusic != null) gameplayMusic.Play();
+        //if (gameplayMusic != null) gameplayMusic.Play();
         SetState(false);
     }
 

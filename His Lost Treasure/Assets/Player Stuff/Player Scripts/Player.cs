@@ -51,10 +51,6 @@ public class Player : MonoBehaviour, IDamage
 
     public float moveSpeed = 5f;
     private Vector3 moveDirection;
-    public KeyCode forwardKey = KeyCode.W;
-    public KeyCode leftKey = KeyCode.A;
-    public KeyCode backKey = KeyCode.S;
-    public KeyCode rightKey = KeyCode.D;
     Vector3 currentVelocity;
     Vector3 velocityChange;
     Vector3 desiredVelocity;
