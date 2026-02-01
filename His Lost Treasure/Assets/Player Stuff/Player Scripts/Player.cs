@@ -51,6 +51,15 @@ public class Player : MonoBehaviour, IDamage
 
     public float moveSpeed = 5f;
     private Vector3 moveDirection;
+    public KeyCode forwardKey = KeyCode.W;
+    public KeyCode leftKey = KeyCode.A;
+    public KeyCode backKey = KeyCode.S;
+    public KeyCode rightKey = KeyCode.D;
+    Vector3 currentVelocity;
+    Vector3 velocityChange;
+    Vector3 desiredVelocity;
+    Vector3 horizontalvelocity;
+    Vector3 verticalvelocity;
 
     // Sprinting
     public float SprintSpeed = 6f;
@@ -75,6 +84,7 @@ public class Player : MonoBehaviour, IDamage
     float lastSlideTime = -10f;
 
     //Ground & Ceiling
+    public LayerMask ignoreLayer;
     public LayerMask groundLayer;
     public LayerMask ceilingMask;
     public float ceilingCheckDistance = 0.1f;
@@ -82,6 +92,10 @@ public class Player : MonoBehaviour, IDamage
     bool crouchPressed;
     private float playerHeight;
     private float targetHeight;
+
+    //movingplatform 
+    Rigidbody movingPlatformRB;
+
 
     //damage flash
     public float flashInterval = 0.1f;
@@ -220,6 +234,7 @@ public class Player : MonoBehaviour, IDamage
     {
         ApplyStateMovement();
         ApplyJumpPhysics();
+       
     }
 
 
@@ -444,8 +459,8 @@ public class Player : MonoBehaviour, IDamage
             break;
 
             case PlayerState.Jump:
-                MoveNormally();
-            break;
+                Move(moveSpeed);
+                break;
 
             case PlayerState.Crouch:
                 Move(crouchSpeed);
@@ -462,8 +477,18 @@ public class Player : MonoBehaviour, IDamage
     // ?????????????????????????????????????????????
     void Move(float speed)
     {
-        Vector3 desiredVelocity = moveDirection * speed;
-        Vector3 currentVelocity = rb.linearVelocity;
+        horizontalvelocity = Vector3.zero;
+        if (isGrounded && movingPlatformRB != null)
+        {
+            horizontalvelocity = new Vector3(movingPlatformRB.linearVelocity.x, 0, movingPlatformRB.linearVelocity.z);
+        }
+
+        desiredVelocity = moveDirection * speed + horizontalvelocity;
+        currentVelocity = rb.linearVelocity;
+
+        velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+        rb.AddForce(velocityChange, ForceMode.VelocityChange);
+       
 
         // Preserve slide momentum
         if (cachedSlideVelocity.magnitude > 0.1f)
@@ -482,31 +507,7 @@ public class Player : MonoBehaviour, IDamage
             );
             return;
         }
-
-        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-        rb.AddForce(velocityChange, ForceMode.VelocityChange);
     }
-
-    void MoveNormally()
-    {
-
-        if (IsSprinting == true)
-        {
-            Vector3 desiredVelocity = moveDirection * moveSpeed;
-            Vector3 currentVelocity = rb.linearVelocity;
-            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-            rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        }
-        else
-        {
-            Vector3 desiredVelocity = moveDirection * moveSpeed;
-            Vector3 currentVelocity = rb.linearVelocity;
-            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-            rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        }
-
-    }
-
     void Jump()
     {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
@@ -643,28 +644,33 @@ public class Player : MonoBehaviour, IDamage
     void CheckGround()
     {
         Vector3 origin = transform.position + Vector3.up * 0.1f;
-        isGrounded = Physics.Raycast(origin, Vector3.down, playerHeight / 2 + 0.2f, groundLayer);
 
-        if (isGrounded && rb.linearVelocity.y <= 0.1f)
-        {
-            coyoteCounter = coyoteTime; // Reset coyote time when grounded
-            jumpLeft = jumps; // Reset jumps when we touch the floor
-        }
+        RaycastHit hit;
 
-        if (Physics.Raycast(origin, Vector3.down, out slopeHit, playerHeight / 2 + 0.3f, groundLayer))
+        if (Physics.Raycast(origin, Vector3.down, out hit, playerHeight / 2 + 0.2f, groundLayer))
         {
             isGrounded = true;
-            slopeNormal = slopeHit.normal;
-            slopeAngle = Vector3.Angle(slopeNormal, Vector3.up);
+           coyoteCounter = coyoteTime; // Reset coyote time when grounded
+            jumpLeft = jumps; // Reset jumps when we touch the floor
+            if (hit.collider.CompareTag("MovingPlatform"))
+            {
+                movingPlatformRB = hit.rigidbody;
+                
+            }
+            else
+            {
+                movingPlatformRB = null;
 
-            coyoteCounter = coyoteTime;
-            jumpLeft = jumps;
+            }
         }
         else
         {
+            
             isGrounded = false;
+            movingPlatformRB = null;
         }
     }
+  
 
     public void TakeDamage(int amount, Vector3 attackerPosition)
     {
