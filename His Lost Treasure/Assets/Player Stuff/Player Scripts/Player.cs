@@ -645,12 +645,22 @@ public class Player : MonoBehaviour, IDamage
     {
         RaycastHit hit;
         Vector3 origin = transform.position + Vector3.up * 0.1f;
-        isGrounded = Physics.Raycast(origin, Vector3.down, playerHeight / 2 + 0.2f, groundLayer);
+        isGrounded = Physics.Raycast(origin, Vector3.down, out hit, playerHeight / 2 + 0.2f, groundLayer);
 
         if (isGrounded && rb.linearVelocity.y <= 0.1f)
         {
             coyoteCounter = coyoteTime; // Reset coyote time when grounded
             jumpLeft = jumps; // Reset jumps when we touch the floor
+            if (hit.collider.CompareTag("MovingPlatform"))
+            {
+                movingPlatformRB = hit.rigidbody;
+
+            }
+            else
+            {
+                movingPlatformRB = null;
+
+            }
         }
 
         if (Physics.Raycast(origin, Vector3.down, out slopeHit, playerHeight / 2 + 0.3f, groundLayer))
