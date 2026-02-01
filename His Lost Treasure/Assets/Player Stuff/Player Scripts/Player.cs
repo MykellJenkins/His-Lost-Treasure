@@ -662,6 +662,10 @@ public class Player : MonoBehaviour, IDamage
 
             }
         }
+        else
+        {
+            movingPlatformRB = null;
+        }
 
         if (Physics.Raycast(origin, Vector3.down, out slopeHit, playerHeight / 2 + 0.3f, groundLayer))
         {
