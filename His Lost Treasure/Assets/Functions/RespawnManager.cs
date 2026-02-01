@@ -52,4 +52,8 @@ public class RespawnManager : MonoBehaviour
 
         Debug.Log("Respawning at: " + currentCheckPoint);
     }
+    public void ResetCheckpoint()
+    {
+        hasCheckpoint = false;
+    }
 }

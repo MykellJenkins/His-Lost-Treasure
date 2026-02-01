@@ -170,6 +170,10 @@ public class GameManager : MonoBehaviour
     //}
     private void OnPause(InputAction.CallbackContext context)
     {
+        //Block pause if game is over
+        if (isGameOver)
+            return;
+
         if (!isPaused)
         {
             StatePause();
@@ -217,7 +221,7 @@ public class GameManager : MonoBehaviour
         Debug.Log("STATE WIN ENTERED");
         if (isGameOver) return;
         isGameOver = true;
-
+        inputActions.UI.Pause.Disable();
         SetState(true);
         ShowMenu(menuWin);
         currentNode?.CompleteLevel();
@@ -245,7 +249,7 @@ public class GameManager : MonoBehaviour
 
         Debug.Log("Setting state true");
         SetState(true);
-
+        inputActions.UI.Pause.Disable();
         if (menuLose == null) Debug.LogError("menuLose not assigned!");
 
         Debug.Log("Showing Lose Menu");
@@ -304,6 +308,29 @@ public class GameManager : MonoBehaviour
         if (isGameOver) return;
         StateWin();
     }
+
+    public void RestartLevel()
+    {
+        // Hard reset global state
+        Time.timeScale = 1f;
+        isPaused = false;
+        isGameOver = false;
+        RespawnManager.Instance?.ResetCheckpoint();
+
+        // Reset cursor
+        Cursor.visible = false;
+        Cursor.lockState = CursorLockMode.Locked;
+
+        // Reset input
+        inputActions.UI.Pause.Enable();
+
+        // Clear menus
+        ShowMenu(null);
+
+        // Reload scene
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
+    }
+
     private void OnEnable()
     {
         if (inputActions != null)
