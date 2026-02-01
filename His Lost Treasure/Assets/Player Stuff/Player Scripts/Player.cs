@@ -120,6 +120,9 @@ public class Player : MonoBehaviour, IDamage
     float slopeAngle;
     Vector3 slopeNormal;
 
+    public Transform feet;          
+    public CapsuleCollider col;
+
     // ????????????????????????????????????????????? 
     // UNITY METHODS 
     // ?????????????????????????????????????????????
@@ -800,6 +803,20 @@ public class Player : MonoBehaviour, IDamage
             this.invertY = settings.invertY;
             // Apply sensitivity to your Cinemachine or Camera script here
         }
+    }
+
+    public void TeleportFromFeet(Vector3 feetWorldPos)
+    {
+        rb.isKinematic = true;
+
+        float heightOffset = col.height * 0.5f;
+        Vector3 newPos = feetWorldPos + Vector3.up * heightOffset;
+
+        rb.position = newPos;
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        rb.isKinematic = false;
     }
 
 

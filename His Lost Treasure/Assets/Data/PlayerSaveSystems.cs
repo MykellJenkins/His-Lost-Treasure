@@ -15,6 +15,7 @@ public class PlayerSaveSystem : MonoBehaviour
             return;
         }
         Instance = this;
+        DontDestroyOnLoad(gameObject);
     }
 
     async void Start()
@@ -31,32 +32,23 @@ public class PlayerSaveSystem : MonoBehaviour
 
     async Task FindPlayerAsync()
     {
-        int attempts = 0;
-        while (player == null && attempts < 300) // ~5 seconds at 60fps
+        while (player == null)
         {
-            GameObject playerGO = GameObject.FindWithTag("Player");
-            if (playerGO != null)
-            {
-                player = playerGO.GetComponent<Player>();
-                break;
-            }
+            GameObject go = GameObject.FindWithTag("Player");
+            if (go != null)
+                player = go.GetComponent<Player>();
 
             await Task.Yield();
-            attempts++;
         }
-
-        if (player == null)
-            Debug.LogWarning("Player not found after waiting! Check scene setup.");
     }
 
     public void SavePlayerProgress()
     {
-        if (!IsPlayableLevel(SceneManager.GetActiveScene().buildIndex)) return;
         if (player == null) return;
 
         PlayerSaveData data = new PlayerSaveData(
             player.maxLives,
-            player.transform,
+            player.feet.position,
             SceneManager.GetActiveScene().buildIndex
         );
 
@@ -68,16 +60,12 @@ public class PlayerSaveSystem : MonoBehaviour
         PlayerSaveData data = SavePlayerData.Instance.LoadPlayer();
         if (data == null) return;
 
-        int currentBuildIndex = SceneManager.GetActiveScene().buildIndex;
-
-        // Only load the scene if forced (from main menu) AND it's a different scene
-        if (forceSceneLoad && data.currentLevel != currentBuildIndex)
+        if (forceSceneLoad &&
+            SceneManager.GetActiveScene().buildIndex != data.currentLevel)
         {
             await SceneManager.LoadSceneAsync(data.currentLevel);
-            return;
         }
 
-        // If we are already in the scene, or loading is not forced, just apply stats
         await FindPlayerAsync();
         ApplyPlayerData(data);
     }
@@ -85,18 +73,12 @@ public class PlayerSaveSystem : MonoBehaviour
     void ApplyPlayerData(PlayerSaveData data)
     {
         player.maxLives = data.maxLives;
-        player.transform.position = data.position.ToVector3();
+        player.TeleportFromFeet(data.feetPosition.ToVector3());
     }
 
     void OnApplicationQuit()
     {
         if (SceneManager.GetActiveScene().name != "NodeMap")
             SavePlayerProgress();
-    }
-
-    bool IsPlayableLevel(int buildIndex)
-    {
-        string name = SceneManager.GetSceneByBuildIndex(buildIndex).name;
-        return name != "NodeMap"; // Add other hubs if needed
     }
 }
