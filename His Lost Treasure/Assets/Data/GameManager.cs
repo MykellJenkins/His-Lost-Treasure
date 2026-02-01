@@ -2,11 +2,13 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 using Unity.Cinemachine;
+using UnityEngine.InputSystem;
 
 
 public class GameManager : MonoBehaviour
 {
     public static GameManager Instance { get; private set; }
+    private PlayerInputActions inputActions;
 
     [Header("Manager References")]
     public GameObject player;
@@ -46,6 +48,8 @@ public class GameManager : MonoBehaviour
         Instance = this;
 
         data = PlayerSaveSystem.Instance;
+        inputActions = new PlayerInputActions();
+
 
         if (rmInstance == null)
             rmInstance = RespawnManager.Instance;
@@ -53,6 +57,8 @@ public class GameManager : MonoBehaviour
 
     void Start()
     {
+
+        Debug.Log("Keyboard detected: " + (Keyboard.current != null));
         PlayerSaveSystem.Instance.LoadPlayerProgress();
         StartCoroutine(InitializePlayerCoroutine());
         Time.timeScale = 1f;
@@ -109,9 +115,9 @@ public class GameManager : MonoBehaviour
     // ---------------- UPDATE ----------------
     void Update()
     {
-       // if (!playerReady) return;
+        // if (!playerReady) return;
 
-        HandleInput();
+        //HandleInput();
 
         if (isPaused || isGameOver) return;
 
@@ -138,31 +144,62 @@ public class GameManager : MonoBehaviour
     }
 
     // ---------------- INPUT ----------------
-    private void HandleInput()
-    {
-        if (isGameOver) return;
+    //private void HandleInput()
+    //{
+    //    if (Input.anyKeyDown)
+    //        Debug.Log("Key pressed");
 
-        if (Input.GetKeyDown(KeyCode.P))
+    //    if (Input.GetKeyDown(KeyCode.P))
+    //        Debug.Log("P pressed");
+
+    //    if (Input.GetKeyDown(KeyCode.P))
+    //    {
+    //        if (!isPaused)
+    //        {
+    //            StatePause();
+    //        }
+    //        else
+    //        {
+    //            // If paused, always unpause unless in settings
+    //            if (menuActive == menuSetting)
+    //                StateBackToPause();
+    //            else
+    //                StateUnpause();
+    //        }
+    //    }
+    //}
+    private void OnPause(InputAction.CallbackContext context)
+    {
+        if (!isPaused)
         {
-            if (!isPaused) StatePause();
-            else if (menuActive == menuPause) StateUnpause();
-            else if (menuActive == menuSetting) StateBackToPause();
+            StatePause();
+        }
+        else
+        {
+            if (menuActive == menuSetting)
+                StateBackToPause();
+            else
+                StateUnpause();
         }
     }
 
     // ---------------- GAME STATES ----------------
     public void StatePause()
     {
+        if (isGameOver) return;
+        Debug.Log("Paused state BEFORE: " + isPaused);
         SetState(true);
         playerScript.enabled = false;
         AudioManagement.instance.SwapTrack(pauseMenuMusic);
-        //StartCoroutine(FadeAudio(gameplayMusic, pauseMenuMusic, audioFadeDuration));
         ShowMenu(menuPause);
     }
 
     public void StateUnpause()
     {
         SetState(false);
+
+        if (playerScript != null)
+            playerScript.enabled = true;
 
         Rigidbody rb = playerScript.GetComponent<Rigidbody>();
         if (rb != null)
@@ -171,9 +208,7 @@ public class GameManager : MonoBehaviour
             rb.angularVelocity = Vector3.zero;
         }
 
-        playerScript.enabled = true;
         AudioManagement.instance.SwapTrack(returnMenuMusic);
-        //StartCoroutine(FadeAudio(pauseMenuMusic, gameplayMusic, audioFadeDuration));
         ShowMenu(null);
     }
 
@@ -268,6 +303,19 @@ public class GameManager : MonoBehaviour
 
         if (isGameOver) return;
         StateWin();
+    }
+    private void OnEnable()
+    {
+        if (inputActions != null)
+            inputActions.UI.Pause.performed += OnPause;
+        inputActions?.Enable();
+    }
+
+    private void OnDisable()
+    {
+        if (inputActions != null)
+            inputActions.UI.Pause.performed -= OnPause;
+        inputActions?.Disable();
     }
 }
 
