@@ -477,8 +477,18 @@ public class Player : MonoBehaviour, IDamage
     // ?????????????????????????????????????????????
     void Move(float speed)
     {
-        Vector3 desiredVelocity = moveDirection * speed;
-        Vector3 currentVelocity = rb.linearVelocity;
+        horizontalvelocity = Vector3.zero;
+        if (isGrounded && movingPlatformRB != null)
+        {
+            horizontalvelocity = new Vector3(movingPlatformRB.linearVelocity.x, 0, movingPlatformRB.linearVelocity.z);
+        }
+
+        desiredVelocity = moveDirection * speed + horizontalvelocity;
+        currentVelocity = rb.linearVelocity;
+
+        velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
+        rb.AddForce(velocityChange, ForceMode.VelocityChange);
+       
 
         // Preserve slide momentum
         if (cachedSlideVelocity.magnitude > 0.1f)
@@ -497,45 +507,7 @@ public class Player : MonoBehaviour, IDamage
             );
             return;
         }
-
-        Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-        rb.AddForce(velocityChange, ForceMode.VelocityChange);
     }
-
-    void MoveNormally()
-    {
-
-        if (IsSprinting == true)
-        {
-            Vector3 desiredVelocity = moveDirection * moveSpeed;
-            Vector3 currentVelocity = rb.linearVelocity;
-            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-            rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        }
-        else
-        {
-            Vector3 desiredVelocity = moveDirection * moveSpeed;
-            Vector3 currentVelocity = rb.linearVelocity;
-            Vector3 velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-            rb.AddForce(velocityChange, ForceMode.VelocityChange);
-        }
-
-    }
-        horizontalvelocity = Vector3.zero;
-        if (isGrounded && movingPlatformRB != null)
-        {
-            horizontalvelocity = new Vector3(movingPlatformRB.linearVelocity.x, 0, movingPlatformRB.linearVelocity.z);
-        }
-        
-        desiredVelocity = moveDirection * speed + horizontalvelocity;
-        currentVelocity = rb.linearVelocity;
-        
-        velocityChange = desiredVelocity - new Vector3(currentVelocity.x, 0, currentVelocity.z);
-        rb.AddForce(velocityChange, ForceMode.VelocityChange);
-
-    }
-   
-
     void Jump()
     {
         rb.linearVelocity = new Vector3(rb.linearVelocity.x, jumpForce, rb.linearVelocity.z);
@@ -698,37 +670,7 @@ public class Player : MonoBehaviour, IDamage
             movingPlatformRB = null;
         }
     }
-       
-
-    void ApplyCrouchMovement()
-    {
-            // Keep existing momentum
-            currentVelocity = rb.linearVelocity;
-            // Optional: allow slow steering while crouched
-            Vector3 steer = moveDirection * (moveSpeed * 0.15f);
-            // 30% steering
-            Vector3 newVelocity = new Vector3(
-                currentVelocity.x + (steer.x * Time.fixedDeltaTime),
-                currentVelocity.y,
-                currentVelocity.z + (steer.z * Time.fixedDeltaTime)
-        );
-
-        rb.linearVelocity = newVelocity;
-
-        if (Physics.Raycast(origin, Vector3.down, out slopeHit, playerHeight / 2 + 0.3f, groundLayer))
-        {
-            isGrounded = true;
-            slopeNormal = slopeHit.normal;
-            slopeAngle = Vector3.Angle(slopeNormal, Vector3.up);
-
-            coyoteCounter = coyoteTime;
-            jumpLeft = jumps;
-        }
-        else
-        {
-            isGrounded = false;
-        }
-    }
+  
 
     public void TakeDamage(int amount, Vector3 attackerPosition)
     {
