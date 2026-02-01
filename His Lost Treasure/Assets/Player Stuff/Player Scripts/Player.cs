@@ -744,11 +744,13 @@ public class Player : MonoBehaviour, IDamage
 
     public PlayerSaveData GetSaveData()
     {
-        // Pass 'this' (the player), the current transform, and the build index
+        float halfHeight = capsule.height * 0.5f;
+        Vector3 feetPosition = transform.position - Vector3.up * halfHeight;
+
         return new PlayerSaveData(
             maxLives,
-            transform,
-            UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex
+            feetPosition,
+            SceneManager.GetActiveScene().buildIndex
         );
     }
 
@@ -757,13 +759,37 @@ public class Player : MonoBehaviour, IDamage
     {
         if (data == null) return;
 
-        this.maxLives = data.maxLives;
+        maxLives = data.maxLives;
 
+        float halfHeight = capsule.height * 0.5f;
+        Vector3 spawnPos = data.feetPosition.ToVector3() + Vector3.up * halfHeight;
 
-        this.transform.position = data.position.ToVector3();
+        // Disable systems that fight transforms
+        Animator animator = GetComponentInChildren<Animator>();
+        if (animator) animator.enabled = false;
 
+        rb.isKinematic = true;
 
+        // Ground snap (prevents below-level spawn)
+        if (Physics.Raycast(
+            spawnPos + Vector3.up,
+            Vector3.down,
+            out RaycastHit hit,
+            3f,
+            groundLayer))
+        {
+            spawnPos.y = hit.point.y + halfHeight;
+        }
+
+        transform.position = spawnPos;
+
+        rb.linearVelocity = Vector3.zero;
+        rb.angularVelocity = Vector3.zero;
+
+        rb.isKinematic = false;
+        if (animator) animator.enabled = true;
     }
+
 
     void LoadPlayerControls()
     {
